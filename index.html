@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>등하원 시간표</title>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+  :root {
+    --background: #ffffff;
+    --foreground: #09090b;
+    --muted: #f4f4f5;
+    --muted-foreground: #71717a;
+    --border: #e4e4e7;
+    --ring: #18181b;
+    --card: #ffffff;
+    --card-foreground: #09090b;
+    --primary: #18181b;
+    --primary-foreground: #fafafa;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+    --accent: #f4f4f5;
+    --accent-foreground: #18181b;
+    --destructive: #ef4444;
+    --radius: 0.5rem;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px 0 rgb(0 0 0 / 0.04);
+
+    --english: #2563eb;
+    --english-bg: #eff6ff;
+    --piano: #db2777;
+    --piano-bg: #fdf2f8;
+    --science: #059669;
+    --science-bg: #ecfdf5;
+    --soccer: #d97706;
+    --soccer-bg: #fffbeb;
+    --art: #7c3aed;
+    --art-bg: #f5f3ff;
+    --baduk: #0d9488;
+    --baduk-bg: #f0fdfa;
+    --froebel: #ea580c;
+    --froebel-bg: #fff7ed;
+    --kinder: #e11d48;
+    --kinder-bg: #fff1f2;
+    --school: #71717a;
+    --school-bg: #f4f4f5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Geist', 'Noto Sans KR', system-ui, sans-serif;
+    background: var(--muted);
+    color: var(--foreground);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrapper {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 20px 16px 48px;
+  }
+
+  /* Header */
+  .header {
+    padding: 12px 0 20px;
+    margin-bottom: 20px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .header-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-icon svg { color: var(--primary-foreground); }
+
+  .header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--foreground);
+  }
+
+  .header .period {
+    font-size: 1rem;
+    color: var(--muted-foreground);
+    font-weight: 400;
+    margin-left: 6px;
+  }
+
+  /* Segmented Control (3 tabs) */
+  .toggle-bar {
+    display: flex;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 16px;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 7px 0;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 150ms ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .toggle-btn:hover { color: var(--foreground); }
+
+  .toggle-btn.active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-weight: 600;
+    box-shadow: var(--shadow);
+  }
+
+  .toggle-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  /* Day selector */
+  .day-selector {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .day-btn {
+    flex: 1;
+    padding: 8px 0 6px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: all 150ms ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .day-btn:hover { color: var(--foreground); background: var(--background); }
+
+  .day-btn.active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .day-btn.active .day-dots span { background: var(--primary-foreground); opacity: 0.7; }
+
+  .day-dots {
+    display: flex;
+    gap: 3px;
+    height: 5px;
+    align-items: center;
+  }
+
+  .day-dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--muted-foreground);
+    opacity: 0.4;
+  }
+
+  /* Summary bar */
+  .summary-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 0.78rem;
+    color: var(--muted-foreground);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.6;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .summary-bar svg { flex-shrink: 0; color: var(--muted-foreground); margin-top: 1px; }
+  .summary-content { flex: 1; }
+
+  .summary-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .summary-line + .summary-line { margin-top: 2px; }
+
+  .summary-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    padding: 1px 8px;
+    border-radius: 9999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    color: #fff;
+    letter-spacing: 0.02em;
+  }
+
+  .summary-badge-yoonwoo { background: #ec4899; }
+  .summary-badge-jun { background: #2563eb; }
+
+  /* Schedule area */
+  .schedule-area {
+    min-height: 120px;
+  }
+
+  /* Individual schedule cards */
+  .schedule-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .schedule-item {
+    position: relative;
+    padding-bottom: 8px;
+    animation: cardIn 0.3s ease both;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Dashed connector between cards */
+  .schedule-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    bottom: 0;
+    height: 8px;
+    width: 1px;
+    border-left: 1.5px dashed var(--border);
+  }
+
+  .event-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    border-left: 3px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .event-card:hover {
+    border-color: var(--ring);
+    border-left-color: inherit;
+    box-shadow: var(--shadow);
+  }
+
+  .event-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .event-time {
+    font-family: 'Geist', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--foreground);
+    letter-spacing: -0.02em;
+  }
+
+  .event-badge {
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .badge-arrive {
+    color: #fff;
+  }
+
+  .badge-leave {
+    background: transparent;
+    border: 1px solid;
+  }
+
+  .event-name {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    letter-spacing: -0.01em;
+  }
+
+  .event-detail {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    margin-top: 1px;
+  }
+
+  .text-warn { color: var(--destructive); font-weight: 600; }
+
+  /* Color assignments */
+  .ev-english .event-card { border-left-color: var(--english); }
+  .ev-english .badge-arrive { background: var(--english); }
+  .ev-english .badge-leave { color: var(--english); border-color: var(--english); }
+
+  .ev-piano .event-card { border-left-color: var(--piano); }
+  .ev-piano .badge-arrive { background: var(--piano); }
+  .ev-piano .badge-leave { color: var(--piano); border-color: var(--piano); }
+
+  .ev-science .event-card { border-left-color: var(--science); }
+  .ev-science .badge-arrive { background: var(--science); }
+  .ev-science .badge-leave { color: var(--science); border-color: var(--science); }
+
+  .ev-soccer .event-card { border-left-color: var(--soccer); }
+  .ev-soccer .badge-arrive { background: var(--soccer); }
+  .ev-soccer .badge-leave { color: var(--soccer); border-color: var(--soccer); }
+
+  .ev-art .event-card { border-left-color: var(--art); }
+  .ev-art .badge-arrive { background: var(--art); }
+  .ev-art .badge-leave { color: var(--art); border-color: var(--art); }
+
+  .ev-baduk .event-card { border-left-color: var(--baduk); }
+  .ev-baduk .badge-arrive { background: var(--baduk); }
+  .ev-baduk .badge-leave { color: var(--baduk); border-color: var(--baduk); }
+
+  .ev-froebel .event-card { border-left-color: var(--froebel); }
+  .ev-froebel .badge-arrive { background: var(--froebel); }
+  .ev-froebel .badge-leave { color: var(--froebel); border-color: var(--froebel); }
+
+  .ev-kinder .event-card { border-left-color: var(--kinder); }
+  .ev-kinder .badge-arrive { background: var(--kinder); }
+  .ev-kinder .badge-leave { color: var(--kinder); border-color: var(--kinder); }
+
+  .ev-school .event-card { border-left-color: var(--school); }
+  .ev-school .badge-arrive { background: var(--school); }
+  .ev-school .badge-leave { color: var(--school); border-color: var(--school); }
+
+  /* Side by Side (함께보기) */
+  .side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 0;
+    min-height: 120px;
+  }
+
+  .side-header {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    margin-bottom: 12px;
+  }
+
+  .side-header-name {
+    text-align: center;
+    padding: 4px 0;
+  }
+
+  .side-header-name .summary-badge {
+    font-size: 0.88rem;
+    padding: 2px 12px;
+  }
+
+  .side-divider-header {
+    background: transparent;
+  }
+
+  .side-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .side-col-left { padding-right: 8px; background: #fdf0f6; border-radius: 10px; padding-top: 6px; padding-bottom: 6px; padding-left: 4px; }
+  .side-col-right { padding-left: 8px; background: #eef4ff; border-radius: 10px; padding-top: 6px; padding-bottom: 6px; padding-right: 4px; }
+
+  .side-divider {
+    background: var(--border);
+  }
+
+  .side-row {
+    display: contents;
+  }
+
+  .side-cell {
+    padding-bottom: 6px;
+  }
+
+  .side-cell-empty {
+    padding-bottom: 6px;
+  }
+
+  .side-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 10px;
+    border-left: 3px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .side-card:hover {
+    border-color: var(--ring);
+    border-left-color: inherit;
+    box-shadow: var(--shadow);
+  }
+
+  .side-card .event-time {
+    font-size: 0.95rem;
+  }
+
+  .side-card .event-name {
+    font-size: 0.8rem;
+  }
+
+  .side-card .event-detail {
+    font-size: 0.7rem;
+  }
+
+  .side-card .event-badge {
+    font-size: 0.62rem;
+    padding: 1px 6px;
+  }
+
+  /* Color for side cards */
+  .side-card.sc-english { border-left-color: var(--english); }
+  .side-card.sc-english .badge-arrive { background: var(--english); }
+  .side-card.sc-english .badge-leave { color: var(--english); border-color: var(--english); }
+
+  .side-card.sc-piano { border-left-color: var(--piano); }
+  .side-card.sc-piano .badge-arrive { background: var(--piano); }
+  .side-card.sc-piano .badge-leave { color: var(--piano); border-color: var(--piano); }
+
+  .side-card.sc-science { border-left-color: var(--science); }
+  .side-card.sc-science .badge-arrive { background: var(--science); }
+  .side-card.sc-science .badge-leave { color: var(--science); border-color: var(--science); }
+
+  .side-card.sc-soccer { border-left-color: var(--soccer); }
+  .side-card.sc-soccer .badge-arrive { background: var(--soccer); }
+  .side-card.sc-soccer .badge-leave { color: var(--soccer); border-color: var(--soccer); }
+
+  .side-card.sc-art { border-left-color: var(--art); }
+  .side-card.sc-art .badge-arrive { background: var(--art); }
+  .side-card.sc-art .badge-leave { color: var(--art); border-color: var(--art); }
+
+  .side-card.sc-baduk { border-left-color: var(--baduk); }
+  .side-card.sc-baduk .badge-arrive { background: var(--baduk); }
+  .side-card.sc-baduk .badge-leave { color: var(--baduk); border-color: var(--baduk); }
+
+  .side-card.sc-froebel { border-left-color: var(--froebel); }
+  .side-card.sc-froebel .badge-arrive { background: var(--froebel); }
+  .side-card.sc-froebel .badge-leave { color: var(--froebel); border-color: var(--froebel); }
+
+  .side-card.sc-kinder { border-left-color: var(--kinder); }
+  .side-card.sc-kinder .badge-arrive { background: var(--kinder); }
+  .side-card.sc-kinder .badge-leave { color: var(--kinder); border-color: var(--kinder); }
+
+  .side-card.sc-school { border-left-color: var(--school); }
+  .side-card.sc-school .badge-arrive { background: var(--school); }
+  .side-card.sc-school .badge-leave { color: var(--school); border-color: var(--school); }
+
+  /* Empty */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted-foreground);
+  }
+  .empty-state svg { margin-bottom: 10px; color: var(--border); }
+  .empty-state p { font-size: 0.85rem; font-weight: 500; }
+
+  /* Fade transition */
+  .fade-enter {
+    animation: fadeContent 150ms ease;
+  }
+
+  @keyframes fadeContent {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Responsive */
+  @media (max-width: 420px) {
+    .wrapper { padding: 16px 12px 36px; }
+    .header h1 { font-size: 1.15rem; }
+    .event-time { font-size: 1rem; }
+    .event-card { padding: 10px 12px; }
+    .day-btn { font-size: 0.78rem; }
+    .side-card { padding: 8px 8px; }
+    .side-card .event-time { font-size: 0.88rem; }
+    .side-card .event-name { font-size: 0.75rem; }
+    .side-card .event-badge { font-size: 0.58rem; padding: 1px 5px; }
+    .side-col-left { padding-right: 5px; }
+    .side-col-right { padding-left: 5px; }
+  }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+      </div>
+      <h1>등하원 시간표 <span class="period">2026년 3–4월</span></h1>
+    </div>
+  </div>
+
+  <div class="toggle-bar">
+    <button class="toggle-btn active" onclick="switchChild('both')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      함께보기
+    </button>
+    <button class="toggle-btn" onclick="switchChild('yoonwoo')">최윤우</button>
+    <button class="toggle-btn" onclick="switchChild('jun')">류준</button>
+  </div>
+
+  <div class="day-selector" id="daySelector"></div>
+
+  <div class="summary-bar">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    <div class="summary-content" id="summaryContent"></div>
+  </div>
+
+  <div class="schedule-area" id="scheduleArea"></div>
+  </div>
+
+  <script>
+const DAYS = ['월','화','수','목','금'];
+
+const DATA = {
+  yoonwoo: {
+    label: '최윤우',
+    info: {
+      '월': '1:30 하교 → 영어 → 과학',
+      '화': '1:30 하교 → 영어 → 피아노 → 축구(심화)',
+      '수': '1:30 하교 → 프뢰벨',
+      '목': '1:30 하교 → 피아노 → 영어',
+      '금': '12:40 하교 → 바둑 → 축구(취미)',
+    },
+    schedule: {
+      '월': [
+        { time: '1:30', name: '하교', type: 'school', badge: '하교', dir: 'leave' },
+        { time: '1:40', name: '영어학원', type: 'english', badge: '등원', dir: 'arrive' },
+        { time: '2:40', name: '영어학원', type: 'english', badge: '하원', dir: 'leave' },
+        { time: '5:00', name: '과학학원', type: 'science', badge: '등원', dir: 'arrive' },
+        { time: '6:00', name: '과학학원', type: 'science', badge: '하원', dir: 'leave' },
+      ],
+      '화': [
+        { time: '1:30', name: '하교', type: 'school', badge: '하교', dir: 'leave' },
+        { time: '1:40', name: '영어학원', type: 'english', badge: '등원', dir: 'arrive' },
+        { time: '2:40', name: '영어학원', type: 'english', badge: '하원', dir: 'leave' },
+        { time: '3:00', name: '피아노학원', type: 'piano', badge: '등원', dir: 'arrive', detail: '영어학원 끝나고' },
+        { time: '4:00', name: '피아노학원', type: 'piano', badge: '하원', dir: 'leave' },
+        { time: '6:40', name: '축구 (심화)', type: 'soccer', badge: '등원', dir: 'arrive' },
+        { time: '8:30', name: '축구 (심화)', type: 'soccer', badge: '하원', dir: 'leave' },
+      ],
+      '수': [
+        { time: '1:30', name: '하교', type: 'school', badge: '하교', dir: 'leave' },
+        { time: '4:00', name: '프뢰벨 수업', type: 'froebel', badge: '수업', dir: 'arrive' },
+      ],
+      '목': [
+        { time: '1:30', name: '하교', type: 'school', badge: '하교', dir: 'leave' },
+        { time: '1:40', name: '피아노학원', type: 'piano', badge: '등원', dir: 'arrive', detail: '학교 끝나고' },
+        { time: '2:40', name: '피아노학원', type: 'piano', badge: '하원', dir: 'leave' },
+        { time: '3:00', name: '영어학원', type: 'english', badge: '등원', dir: 'arrive' },
+        { time: '4:00', name: '영어학원', type: 'english', badge: '하원', dir: 'leave' },
+      ],
+      '금': [
+        { time: '12:40', name: '하교', type: 'school', badge: '하교', dir: 'leave', detail: '4교시' },
+        { time: '2:15', name: '바둑 방과후', type: 'baduk', badge: '시작', dir: 'arrive' },
+        { time: '3:15', name: '바둑 방과후', type: 'baduk', badge: '종료', dir: 'leave' },
+        { time: '3:50', name: '축구 (취미)', type: 'soccer', badge: '등원', dir: 'arrive' },
+        { time: '5:13', name: '축구 (취미)', type: 'soccer', badge: '하원', dir: 'leave', detail: '주연이집 도착' },
+      ],
+    }
+  },
+  jun: {
+    label: '류준',
+    info: {
+      '월': '9:05 유치원 → 축구',
+      '화': '9:05 유치원 → 영어학원',
+      '수': '9:05 유치원 → 3:45 하원 → 과학학원',
+      '목': '9:05 유치원 → 영어학원',
+      '금': '9:05 유치원 → 미술학원',
+    },
+    schedule: {
+      '월': [
+        { time: '9:05', name: '유치원 등원', type: 'kinder', badge: '등원', dir: 'arrive', detail: '유치원차량, 7단지 키즈스테이션' },
+        { time: '5:00', name: '축구', type: 'soccer', badge: '등원', dir: 'arrive', detail: '학원차량(유치원에서 바로이동)' },
+        { time: '6:00', name: '축구', type: 'soccer', badge: '하원', dir: 'leave', detail: '아빠 픽업' },
+      ],
+      '화': [
+        { time: '9:05', name: '유치원 등원', type: 'kinder', badge: '등원', dir: 'arrive', detail: '유치원차량, 7단지 키즈스테이션' },
+        { time: '3:20', name: '영어학원', type: 'english', badge: '등원', dir: 'arrive', detail: '학원차량 유치원에서 픽업' },
+        { time: '6:00', name: '영어학원', type: 'english', badge: '하원', dir: 'leave', detail: '학원차량 <span class="text-warn">(시간/장소 확인필요)</span>' },
+      ],
+      '수': [
+        { time: '9:05', name: '유치원 등원', type: 'kinder', badge: '등원', dir: 'arrive', detail: '유치원차량, 7단지 키즈스테이션' },
+        { time: '3:45', name: '유치원 하원', type: 'kinder', badge: '하원', dir: 'leave', detail: '유치원차량' },
+        { time: '5:30', name: '과학학원', type: 'science', badge: '등원', dir: 'arrive', detail: '아빠 데려다줌' },
+        { time: '6:25', name: '과학학원', type: 'science', badge: '하원', dir: 'leave', detail: '아빠 픽업' },
+      ],
+      '목': [
+        { time: '9:05', name: '유치원 등원', type: 'kinder', badge: '등원', dir: 'arrive', detail: '유치원차량, 7단지 키즈스테이션' },
+        { time: '3:20', name: '영어학원', type: 'english', badge: '등원', dir: 'arrive', detail: '학원차량 유치원에서 픽업' },
+        { time: '6:00', name: '영어학원', type: 'english', badge: '하원', dir: 'leave', detail: '학원차량 <span class="text-warn">(시간/장소 확인필요)</span>' },
+      ],
+      '금': [
+        { time: '9:05', name: '유치원 등원', type: 'kinder', badge: '등원', dir: 'arrive', detail: '유치원차량, 7단지 키즈스테이션' },
+        { time: '4:00', name: '미술학원', type: 'art', badge: '등원', dir: 'arrive', detail: '학원차량' },
+        { time: '5:00', name: '미술학원', type: 'art', badge: '하원', dir: 'leave', detail: '아빠 픽업' },
+      ],
+    }
+  }
+};
+
+let currentChild = 'both';
+let currentDay = '월';
+const todayIdx = new Date().getDay();
+if (todayIdx >= 1 && todayIdx <= 5) currentDay = DAYS[todayIdx - 1];
+
+function parseTime(t) {
+  const [h, m] = t.split(':').map(Number);
+  // 1~8시는 오후(PM), 9~12시는 오전/정오
+  const hour = (h >= 1 && h <= 8) ? h + 12 : h;
+  return hour * 60 + m;
+}
+
+function formatTime(t) {
+  const h = parseInt(t.split(':')[0]);
+  const prefix = (h >= 1 && h <= 8) || h === 12 ? '오후' : '오전';
+  return prefix + ' ' + t;
+}
+
+function switchChild(child) {
+  currentChild = child;
+  document.querySelectorAll('.toggle-btn').forEach((btn, i) => {
+    btn.classList.toggle('active',
+      (i === 0 && child === 'both') ||
+      (i === 1 && child === 'yoonwoo') ||
+      (i === 2 && child === 'jun')
+    );
+  });
+  renderDays();
+  render();
+}
+
+function selectDay(day) {
+  currentDay = day;
+  document.querySelectorAll('.day-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', DAYS[i] === day);
+  });
+  render();
+}
+
+function renderDays() {
+  document.getElementById('daySelector').innerHTML = DAYS.map(d => {
+    let count;
+    if (currentChild === 'both') {
+      count = (DATA.yoonwoo.schedule[d] || []).length + (DATA.jun.schedule[d] || []).length;
+    } else {
+      count = (DATA[currentChild].schedule[d] || []).length;
+    }
+    const dots = Math.min(count, 3);
+    const dotHtml = dots > 0
+      ? '<div class="day-dots">' + Array.from({length: dots}, () => '<span></span>').join('') + '</div>'
+      : '<div class="day-dots"></div>';
+    return `<button class="day-btn ${d === currentDay ? 'active' : ''}" onclick="selectDay('${d}')">
+      ${d}${dotHtml}
+    </button>`;
+  }).join('');
+}
+
+function buildEventCard(ev) {
+  const badgeDot = ev.dir === 'arrive' ? '●' : '○';
+  const badgeClass = ev.dir === 'arrive' ? 'badge-arrive' : 'badge-leave';
+  return `<div class="event-card-header">
+    <span class="event-time">${formatTime(ev.time)}</span>
+    <span class="event-badge ${badgeClass}">${badgeDot} ${ev.badge}</span>
+  </div>
+  <div class="event-name">${ev.name}</div>
+  ${ev.detail ? `<div class="event-detail">${ev.detail}</div>` : ''}`;
+}
+
+function buildSideCard(ev) {
+  const badgeDot = ev.dir === 'arrive' ? '●' : '○';
+  const badgeClass = ev.dir === 'arrive' ? 'badge-arrive' : 'badge-leave';
+  return `<div class="side-card sc-${ev.type}">
+    <div class="event-card-header">
+      <span class="event-time">${formatTime(ev.time)}</span>
+      <span class="event-badge ${badgeClass}">${badgeDot} ${ev.badge}</span>
+    </div>
+    <div class="event-name">${ev.name}</div>
+    ${ev.detail ? `<div class="event-detail">${ev.detail}</div>` : ''}
+  </div>`;
+}
+
+function renderSummary() {
+  const sc = document.getElementById('summaryContent');
+  if (currentChild === 'both') {
+    const infoY = DATA.yoonwoo.info[currentDay] || '일정 없음';
+    const infoJ = DATA.jun.info[currentDay] || '일정 없음';
+    sc.innerHTML = `
+      <div class="summary-line"><span class="summary-badge summary-badge-yoonwoo">최윤우</span> <span>${currentDay}요일 · ${infoY}</span></div>
+      <div class="summary-line"><span class="summary-badge summary-badge-jun">류 준</span> <span>${currentDay}요일 · ${infoJ}</span></div>
+    `;
+  } else {
+    const info = DATA[currentChild].info[currentDay] || '';
+    sc.innerHTML = `<div class="summary-line"><span>${currentDay}요일 · ${info}</span></div>`;
+  }
+}
+
+function render() {
+  renderSummary();
+  const area = document.getElementById('scheduleArea');
+  area.classList.remove('fade-enter');
+  void area.offsetWidth; // force reflow
+  area.classList.add('fade-enter');
+
+  if (currentChild === 'both') {
+    renderBoth();
+  } else {
+    renderSingle();
+  }
+}
+
+function renderSingle() {
+  const events = DATA[currentChild].schedule[currentDay] || [];
+  const area = document.getElementById('scheduleArea');
+
+  if (events.length === 0) {
+    area.innerHTML = `<div class="empty-state">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <p>이 날은 일정이 없습니다</p>
+    </div>`;
+    return;
+  }
+
+  area.innerHTML = '<div class="schedule-list">' + events.map((ev, i) => {
+    return `<div class="schedule-item ev-${ev.type}" style="animation-delay:${i * 40}ms">
+      <div class="event-card">${buildEventCard(ev)}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function renderBoth() {
+  const evY = (DATA.yoonwoo.schedule[currentDay] || []).map(e => ({...e, child: 'yoonwoo'}));
+  const evJ = (DATA.jun.schedule[currentDay] || []).map(e => ({...e, child: 'jun'}));
+  const area = document.getElementById('scheduleArea');
+
+  if (evY.length === 0 && evJ.length === 0) {
+    area.innerHTML = `<div class="empty-state">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <p>이 날은 일정이 없습니다</p>
+    </div>`;
+    return;
+  }
+
+  // Merge and sort by time
+  const all = [...evY, ...evJ].sort((a, b) => parseTime(a.time) - parseTime(b.time));
+
+  // Group into rows: events at the same time should share a row
+  const rows = [];
+  let i = 0;
+  while (i < all.length) {
+    const t = parseTime(all[i].time);
+    const row = { left: null, right: null };
+    while (i < all.length && parseTime(all[i].time) === t) {
+      if (all[i].child === 'yoonwoo') {
+        if (row.left) {
+          rows.push({...row});
+          row.left = null;
+          row.right = null;
+        }
+        row.left = all[i];
+      } else {
+        if (row.right) {
+          rows.push({...row});
+          row.left = null;
+          row.right = null;
+        }
+        row.right = all[i];
+      }
+      i++;
+    }
+    rows.push(row);
+  }
+
+  let html = `<div class="side-header">
+    <div class="side-header-name"><span class="summary-badge summary-badge-yoonwoo">최윤우</span></div>
+    <div class="side-divider-header"></div>
+    <div class="side-header-name"><span class="summary-badge summary-badge-jun">류 준</span></div>
+  </div>
+  <div class="side-by-side">`;
+
+  // Build left column, divider, right column
+  let leftHtml = '<div class="side-col side-col-left">';
+  let rightHtml = '<div class="side-col side-col-right">';
+
+  rows.forEach((row, idx) => {
+    const delay = `style="animation-delay:${idx * 40}ms"`;
+    if (row.left) {
+      leftHtml += `<div class="side-cell" ${delay}>${buildSideCard(row.left)}</div>`;
+    } else {
+      leftHtml += `<div class="side-cell-empty" ${delay}><div style="height:${estimateCardHeight(row.right)}px"></div></div>`;
+    }
+    if (row.right) {
+      rightHtml += `<div class="side-cell" ${delay}>${buildSideCard(row.right)}</div>`;
+    } else {
+      rightHtml += `<div class="side-cell-empty" ${delay}><div style="height:${estimateCardHeight(row.left)}px"></div></div>`;
+    }
+  });
+
+  leftHtml += '</div>';
+  rightHtml += '</div>';
+
+  html += leftHtml + '<div class="side-divider"></div>' + rightHtml + '</div>';
+  area.innerHTML = html;
+}
+
+function estimateCardHeight(ev) {
+  if (!ev) return 60;
+  return ev.detail ? 76 : 64;
+}
+
+renderDays();
+render();
+  </script>
+</body>
+</html>
