@@ -882,8 +882,10 @@ function renderSummary() {
       <div class="summary-line"><span class="summary-badge summary-badge-jun">류 준</span> <span>${infoJ}</span></div>
     `;
   } else {
-    const info = DATA[currentChild].info[currentDay] || '';
-    sc.innerHTML = `<div class="summary-line"><span>${currentDay}요일 · ${info}</span></div>`;
+    const info = DATA[currentChild].info[currentDay] || '일정 없음';
+    const label = DATA[currentChild].label;
+    const badgeClass = `summary-badge-${currentChild}`;
+    sc.innerHTML = `<div class="summary-line"><span class="summary-badge ${badgeClass}">${label}</span> <span>${info}</span></div>`;
   }
 }
 
