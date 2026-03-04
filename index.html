@@ -459,6 +459,16 @@
     0%, 100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(239,68,68,0.3); }
     50% { transform: scale(1.2); box-shadow: 0 0 0 5px rgba(239,68,68,0.15), 0 0 10px rgba(239,68,68,0.2); }
   }
+  .now-dimming {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9;
+    pointer-events: none;
+    border-radius: 10px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.55) 70%, rgba(255,255,255,0) 100%);
+  }
 
   .side-row {
     display: contents;
@@ -912,7 +922,7 @@ function renderBoth() {
 
   html += leftHtml + '<div class="side-divider"></div>' + rightHtml + '</div>';
   area.innerHTML = html;
-  requestAnimationFrame(() => renderNowIndicator());
+  requestAnimationFrame(() => renderNowIndicator(true));
 }
 
 function estimateCardHeight(ev) {
@@ -920,9 +930,11 @@ function estimateCardHeight(ev) {
   return ev.detail ? 76 : 64;
 }
 
-function renderNowIndicator() {
+function renderNowIndicator(scrollToCenter) {
   const existing = document.querySelector('.now-indicator');
   if (existing) existing.remove();
+  const existingDim = document.querySelector('.now-dimming');
+  if (existingDim) existingDim.remove();
 
   if (currentChild !== 'both' || !isToday()) return;
 
@@ -982,6 +994,17 @@ function renderNowIndicator() {
     <div class="now-indicator-dot"></div>
   `;
   sbs.appendChild(indicator);
+
+  if (indicatorY > 0) {
+    const dimming = document.createElement('div');
+    dimming.className = 'now-dimming';
+    dimming.style.height = indicatorY + 'px';
+    sbs.appendChild(dimming);
+  }
+
+  if (scrollToCenter) {
+    indicator.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 setInterval(() => {
