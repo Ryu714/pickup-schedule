@@ -203,13 +203,22 @@
     font-size: 0.78rem;
     color: var(--muted-foreground);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     line-height: 1.6;
     box-shadow: var(--shadow-sm);
   }
 
   .summary-bar svg { flex-shrink: 0; color: var(--muted-foreground); margin-top: 1px; }
+  .summary-label {
+    writing-mode: vertical-rl;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--muted-foreground);
+    letter-spacing: 0.6em;
+    flex-shrink: 0;
+  }
   .summary-content { flex: 1; }
 
   .summary-line {
@@ -379,6 +388,7 @@
     grid-template-columns: 1fr 1px 1fr;
     gap: 0;
     min-height: 120px;
+    position: relative;
   }
 
   .side-header {
@@ -412,6 +422,42 @@
 
   .side-divider {
     background: var(--border);
+  }
+
+  /* Now indicator */
+  .now-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .now-indicator-line {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: #ef4444;
+    border-radius: 1px;
+  }
+  .now-indicator-dot {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(239,68,68,0.3);
+    z-index: 11;
+    animation: nowPulse 2s ease-in-out infinite;
+  }
+  @keyframes nowPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(239,68,68,0.3); }
+    50% { transform: scale(1.2); box-shadow: 0 0 0 5px rgba(239,68,68,0.15), 0 0 10px rgba(239,68,68,0.2); }
   }
 
   .side-row {
@@ -554,7 +600,6 @@
   <div class="day-selector" id="daySelector"></div>
 
   <div class="summary-bar">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
     <div class="summary-content" id="summaryContent"></div>
   </div>
 
@@ -653,8 +698,20 @@ const DATA = {
 
 let currentChild = 'both';
 let currentDay = '월';
+let _sideRows = [];
 const todayIdx = new Date().getDay();
 if (todayIdx >= 1 && todayIdx <= 5) currentDay = DAYS[todayIdx - 1];
+
+function isToday() {
+  const d = new Date().getDay();
+  if (d < 1 || d > 5) return false;
+  return currentDay === DAYS[d - 1];
+}
+
+function getCurrentMinutes() {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+}
 
 function parseTime(t) {
   const [h, m] = t.split(':').map(Number);
@@ -738,8 +795,8 @@ function renderSummary() {
     const infoY = DATA.yoonwoo.info[currentDay] || '일정 없음';
     const infoJ = DATA.jun.info[currentDay] || '일정 없음';
     sc.innerHTML = `
-      <div class="summary-line"><span class="summary-badge summary-badge-yoonwoo">최윤우</span> <span>${currentDay}요일 · ${infoY}</span></div>
-      <div class="summary-line"><span class="summary-badge summary-badge-jun">류 준</span> <span>${currentDay}요일 · ${infoJ}</span></div>
+      <div class="summary-line"><span class="summary-badge summary-badge-yoonwoo">최윤우</span> <span>${infoY}</span></div>
+      <div class="summary-line"><span class="summary-badge summary-badge-jun">류 준</span> <span>${infoJ}</span></div>
     `;
   } else {
     const info = DATA[currentChild].info[currentDay] || '';
@@ -851,14 +908,85 @@ function renderBoth() {
   leftHtml += '</div>';
   rightHtml += '</div>';
 
+  _sideRows = rows;
+
   html += leftHtml + '<div class="side-divider"></div>' + rightHtml + '</div>';
   area.innerHTML = html;
+  requestAnimationFrame(() => renderNowIndicator());
 }
 
 function estimateCardHeight(ev) {
   if (!ev) return 60;
   return ev.detail ? 76 : 64;
 }
+
+function renderNowIndicator() {
+  const existing = document.querySelector('.now-indicator');
+  if (existing) existing.remove();
+
+  if (currentChild !== 'both' || !isToday()) return;
+
+  const sbs = document.querySelector('.side-by-side');
+  if (!sbs || _sideRows.length === 0) return;
+
+  const nowMin = getCurrentMinutes();
+
+  // 각 행의 시간(분) 구하기
+  const rowTimes = _sideRows.map(r => parseTime((r.left || r.right).time));
+  const firstTime = rowTimes[0];
+  const lastTime = rowTimes[rowTimes.length - 1];
+
+  // 이벤트 범위 ±60분 벗어나면 비표시
+  if (nowMin < firstTime - 60 || nowMin > lastTime + 60) return;
+
+  const leftCol = sbs.querySelector('.side-col-left');
+  if (!leftCol) return;
+  const cells = leftCol.querySelectorAll('.side-cell, .side-cell-empty');
+  if (cells.length === 0) return;
+
+  const sbsRect = sbs.getBoundingClientRect();
+  const rowPositions = [];
+  for (let i = 0; i < cells.length; i++) {
+    const rect = cells[i].getBoundingClientRect();
+    rowPositions.push({
+      timeMin: rowTimes[i],
+      top: rect.top - sbsRect.top,
+      bottom: rect.bottom - sbsRect.top,
+      mid: (rect.top + rect.bottom) / 2 - sbsRect.top,
+    });
+  }
+
+  let indicatorY;
+  if (nowMin <= rowPositions[0].timeMin) {
+    indicatorY = rowPositions[0].top;
+  } else if (nowMin >= rowPositions[rowPositions.length - 1].timeMin) {
+    indicatorY = rowPositions[rowPositions.length - 1].bottom;
+  } else {
+    let beforeIdx = 0;
+    for (let i = 0; i < rowPositions.length; i++) {
+      if (rowPositions[i].timeMin <= nowMin) beforeIdx = i;
+    }
+    const afterIdx = beforeIdx + 1;
+    const before = rowPositions[beforeIdx];
+    const after = rowPositions[afterIdx];
+    const timeDelta = after.timeMin - before.timeMin;
+    const ratio = timeDelta > 0 ? (nowMin - before.timeMin) / timeDelta : 0;
+    indicatorY = before.bottom + (after.top - before.bottom) * ratio;
+  }
+
+  const indicator = document.createElement('div');
+  indicator.className = 'now-indicator';
+  indicator.style.top = indicatorY + 'px';
+  indicator.innerHTML = `
+    <div class="now-indicator-line"></div>
+    <div class="now-indicator-dot"></div>
+  `;
+  sbs.appendChild(indicator);
+}
+
+setInterval(() => {
+  if (currentChild === 'both' && isToday()) renderNowIndicator();
+}, 60000);
 
 renderDays();
 render();
