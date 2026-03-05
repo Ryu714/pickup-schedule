@@ -277,32 +277,6 @@
     font-weight: 600;
   }
 
-  /* Summary bar */
-  .summary-bar {
-    background: var(--card);
-    border: none;
-    border-radius: var(--radius-md);
-    padding: var(--space-3) var(--space-4);
-    margin-bottom: var(--space-4);
-    font-size: var(--text-sm);
-    color: var(--muted-foreground);
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    line-height: 1.6;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .summary-content { flex: 1; }
-
-  .summary-line {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .summary-line + .summary-line { margin-top: var(--space-1); }
-
   .summary-badge {
     display: inline-flex;
     align-items: center;
@@ -469,24 +443,16 @@
     position: relative;
   }
 
-  .side-header {
-    display: grid;
-    grid-template-columns: 1fr var(--space-2) 1fr;
-    margin-bottom: var(--space-3);
-  }
-
-  .side-header-name {
+  .side-col-name {
     text-align: center;
-    padding: var(--space-1) 0;
+    padding: var(--space-2) 0;
+    position: relative;
+    z-index: 11;
   }
 
-  .side-header-name .summary-badge {
+  .side-col-name .summary-badge {
     font-size: var(--text-base);
     padding: 2px 12px;
-  }
-
-  .side-divider-header {
-    background: transparent;
   }
 
   .side-col {
@@ -497,12 +463,14 @@
 
   .side-col-left {
     padding: 6px 8px 6px 6px;
-    background: linear-gradient(180deg, rgba(253, 242, 248, 0.45) 0%, rgba(253, 242, 248, 0.25) 100%);
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px solid rgba(16, 185, 129, 0.2);
     border-radius: var(--radius-md);
   }
   .side-col-right {
     padding: 6px 6px 6px 8px;
-    background: linear-gradient(180deg, rgba(239, 246, 255, 0.45) 0%, rgba(239, 246, 255, 0.25) 100%);
+    background: rgba(37, 99, 235, 0.06);
+    border: 1px solid rgba(37, 99, 235, 0.2);
     border-radius: var(--radius-md);
   }
 
@@ -748,10 +716,6 @@
 
   <div class="day-selector" id="daySelector" role="tablist" aria-label="요일 선택"></div>
 
-  <div class="summary-bar" aria-live="polite">
-    <div class="summary-content" id="summaryContent"></div>
-  </div>
-
   <main class="schedule-area" id="scheduleArea" aria-live="polite"></main>
   </div>
 
@@ -761,13 +725,6 @@ const DAYS = ['월','화','수','목','금'];
 const DATA = {
   yoonwoo: {
     label: '최윤우',
-    info: {
-      '월': '등/하교 → 영어 → 하연과학',
-      '화': '등/하교 → 영어 → 피아노 → 축구(심화)',
-      '수': '등/하교 → 프뢰벨',
-      '목': '등/하교 → 피아노 → 영어',
-      '금': '등/하교 → 바둑 → 축구(취미)',
-    },
     schedule: {
       '월': [
         { time: '1:30', name: '하교', type: 'school', badge: '하교', dir: 'leave', detail: '한아람초' },
@@ -807,13 +764,6 @@ const DATA = {
   },
   jun: {
     label: '류준',
-    info: {
-      '월': '등/하원 → 축구',
-      '화': '등/하원 → 영어학원',
-      '수': '등/하원 → 하연과학',
-      '목': '등/하원 → 영어학원',
-      '금': '등/하원 → 미술학원',
-    },
     schedule: {
       '월': [
         { time: '9:05', name: '유치원 등원', type: 'kinder', badge: '등원', dir: 'arrive', detail: '유치원버스승차 / 키즈스테이션' },
@@ -926,25 +876,7 @@ function buildSideCard(ev) {
   </div>`;
 }
 
-function renderSummary() {
-  const sc = document.getElementById('summaryContent');
-  if (currentChild === 'both') {
-    const infoY = DATA.yoonwoo.info[currentDay] || '일정 없음';
-    const infoJ = DATA.jun.info[currentDay] || '일정 없음';
-    sc.innerHTML = `
-      <div class="summary-line"><span class="summary-badge summary-badge-yoonwoo">최윤우</span> <span>${infoY}</span></div>
-      <div class="summary-line"><span class="summary-badge summary-badge-jun">류 준</span> <span>${infoJ}</span></div>
-    `;
-  } else {
-    const info = DATA[currentChild].info[currentDay] || '일정 없음';
-    const label = DATA[currentChild].label;
-    const badgeClass = `summary-badge-${currentChild}`;
-    sc.innerHTML = `<div class="summary-line"><span class="summary-badge ${badgeClass}">${label}</span> <span>${info}</span></div>`;
-  }
-}
-
 function render() {
-  renderSummary();
   const area = document.getElementById('scheduleArea');
   area.classList.remove('fade-enter');
   void area.offsetWidth; // force reflow
@@ -1019,16 +951,11 @@ function renderBoth() {
     rows.push(row);
   }
 
-  let html = `<div class="side-header">
-    <div class="side-header-name"><span class="summary-badge summary-badge-yoonwoo">최윤우</span></div>
-    <div class="side-divider-header"></div>
-    <div class="side-header-name"><span class="summary-badge summary-badge-jun">류 준</span></div>
-  </div>
-  <div class="side-by-side">`;
+  let html = `<div class="side-by-side">`;
 
   // Build left column, divider, right column
-  let leftHtml = '<div class="side-col side-col-left">';
-  let rightHtml = '<div class="side-col side-col-right">';
+  let leftHtml = '<div class="side-col side-col-left"><div class="side-col-name"><span class="summary-badge summary-badge-yoonwoo">최윤우</span></div>';
+  let rightHtml = '<div class="side-col side-col-right"><div class="side-col-name"><span class="summary-badge summary-badge-jun">류 준</span></div>';
 
   rows.forEach((row, idx) => {
     const delay = `style="animation-delay:${idx * 40}ms"`;
