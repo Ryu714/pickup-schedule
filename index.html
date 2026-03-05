@@ -1136,6 +1136,7 @@ function applyGlowToNextCards() {
 
 setInterval(() => {
   if (currentChild === 'both' && isToday()) renderNowIndicator();
+  applyGlowToNextCards();
 }, 60000);
 
 renderDays();
