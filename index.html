@@ -462,12 +462,14 @@
   }
 
   .side-col-left {
+    position: relative;
     padding: 6px 8px 6px 6px;
     background: rgba(16, 185, 129, 0.06);
     border: 1px solid rgba(16, 185, 129, 0.2);
     border-radius: var(--radius-md);
   }
   .side-col-right {
+    position: relative;
     padding: 6px 6px 6px 8px;
     background: rgba(37, 99, 235, 0.06);
     border: 1px solid rgba(37, 99, 235, 0.2);
@@ -1001,8 +1003,7 @@ function estimateCardHeight(ev) {
 function renderNowIndicator(scrollToCenter) {
   const existing = document.querySelector('.now-indicator');
   if (existing) existing.remove();
-  const existingDim = document.querySelector('.now-dimming');
-  if (existingDim) existingDim.remove();
+  document.querySelectorAll('.now-dimming').forEach(el => el.remove());
 
   if (currentChild !== 'both' || !isToday()) return;
 
@@ -1064,10 +1065,12 @@ function renderNowIndicator(scrollToCenter) {
   sbs.appendChild(indicator);
 
   if (indicatorY > 0) {
-    const dimming = document.createElement('div');
-    dimming.className = 'now-dimming';
-    dimming.style.height = indicatorY + 'px';
-    sbs.appendChild(dimming);
+    [leftCol, rightCol].forEach(col => {
+      const dimming = document.createElement('div');
+      dimming.className = 'now-dimming';
+      dimming.style.height = indicatorY + 'px';
+      col.appendChild(dimming);
+    });
   }
 
   if (scrollToCenter) {
