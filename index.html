@@ -446,7 +446,7 @@
   .side-col {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 12px;
   }
 
   .side-col-left {
@@ -481,6 +481,7 @@
     left: 8px;
     right: 8px;
     height: 2px;
+    top: -1px;
     background: #3b82f6;
     border-radius: 1px;
   }
@@ -512,14 +513,6 @@
 
   .side-row {
     display: contents;
-  }
-
-  .side-cell {
-    padding-bottom: 6px;
-  }
-
-  .side-cell-empty {
-    padding-bottom: 6px;
   }
 
   .side-card {
@@ -1007,6 +1000,19 @@ function renderBoth() {
 
   html += leftHtml + '<div class="side-divider"></div>' + rightHtml + '</div>';
   area.innerHTML = html;
+
+  // 좌우 셀 높이 동기화: 추정값 오차로 인한 수직 위치 어긋남 방지
+  const sbsEl = area.querySelector('.side-by-side');
+  if (sbsEl) {
+    const lCells = sbsEl.querySelector('.side-col-left').querySelectorAll('.side-cell, .side-cell-empty');
+    const rCells = sbsEl.querySelector('.side-col-right').querySelectorAll('.side-cell, .side-cell-empty');
+    for (let i = 0; i < lCells.length; i++) {
+      const maxH = Math.max(lCells[i].offsetHeight, rCells[i].offsetHeight);
+      lCells[i].style.minHeight = maxH + 'px';
+      rCells[i].style.minHeight = maxH + 'px';
+    }
+  }
+
   requestAnimationFrame(() => renderNowIndicator(true));
 }
 
@@ -1037,38 +1043,38 @@ function renderNowIndicator(scrollToCenter) {
   if (nowMin < firstTime - 60 || nowMin > lastTime + 60) return;
 
   const leftCol = sbs.querySelector('.side-col-left');
-  if (!leftCol) return;
-  const cells = leftCol.querySelectorAll('.side-cell, .side-cell-empty');
-  if (cells.length === 0) return;
+  const rightCol = sbs.querySelector('.side-col-right');
+  if (!leftCol || !rightCol) return;
+  const leftCells = leftCol.querySelectorAll('.side-cell, .side-cell-empty');
+  const rightCells = rightCol.querySelectorAll('.side-cell, .side-cell-empty');
+  if (leftCells.length === 0) return;
 
   const sbsRect = sbs.getBoundingClientRect();
   const rowPositions = [];
-  for (let i = 0; i < cells.length; i++) {
-    const rect = cells[i].getBoundingClientRect();
+  for (let i = 0; i < leftCells.length; i++) {
+    const lRect = leftCells[i].getBoundingClientRect();
+    const rRect = rightCells[i] ? rightCells[i].getBoundingClientRect() : lRect;
     rowPositions.push({
       timeMin: rowTimes[i],
-      top: rect.top - sbsRect.top,
-      bottom: rect.bottom - sbsRect.top,
-      mid: (rect.top + rect.bottom) / 2 - sbsRect.top,
+      top: Math.min(lRect.top, rRect.top) - sbsRect.top,
+      bottom: Math.max(lRect.bottom, rRect.bottom) - sbsRect.top,
     });
   }
 
   let indicatorY;
   if (nowMin <= rowPositions[0].timeMin) {
     indicatorY = rowPositions[0].top;
-  } else if (nowMin >= rowPositions[rowPositions.length - 1].timeMin) {
+  } else if (nowMin > rowPositions[rowPositions.length - 1].timeMin) {
     indicatorY = rowPositions[rowPositions.length - 1].bottom;
   } else {
     let beforeIdx = 0;
     for (let i = 0; i < rowPositions.length; i++) {
-      if (rowPositions[i].timeMin <= nowMin) beforeIdx = i;
+      if (rowPositions[i].timeMin < nowMin) beforeIdx = i;
     }
     const afterIdx = beforeIdx + 1;
     const before = rowPositions[beforeIdx];
     const after = rowPositions[afterIdx];
-    const timeDelta = after.timeMin - before.timeMin;
-    const ratio = timeDelta > 0 ? (nowMin - before.timeMin) / timeDelta : 0;
-    indicatorY = before.bottom + (after.top - before.bottom) * ratio;
+    indicatorY = (before.bottom + after.top) / 2;
   }
 
   const indicator = document.createElement('div');
@@ -1134,10 +1140,19 @@ function applyGlowToNextCards() {
   }
 }
 
-setInterval(() => {
-  if (currentChild === 'both' && isToday()) renderNowIndicator();
-  applyGlowToNextCards();
-}, 60000);
+// 정분(XX:00)에 맞춰 갱신 동기화
+function scheduleMinuteSync() {
+  const msToNextMin = (60 - new Date().getSeconds()) * 1000;
+  setTimeout(() => {
+    if (currentChild === 'both' && isToday()) renderNowIndicator();
+    applyGlowToNextCards();
+    setInterval(() => {
+      if (currentChild === 'both' && isToday()) renderNowIndicator();
+      applyGlowToNextCards();
+    }, 60000);
+  }, msToNextMin);
+}
+scheduleMinuteSync();
 
 renderDays();
 render();
