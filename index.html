@@ -158,12 +158,12 @@
   }
 
   .weather-icon {
-    font-size: 1.675rem;
+    font-size: 1.55rem;
     line-height: 1;
   }
 
   .weather-temp {
-    font-size: 1.75rem;
+    font-size: 1.625rem;
     font-weight: 600;
     color: var(--foreground);
     letter-spacing: -0.02em;
@@ -175,7 +175,7 @@
     align-items: flex-end;
     gap: 1px;
     margin-left: 10px;
-    font-size: 1rem;
+    font-size: 0.9375rem;
     font-weight: 500;
     line-height: 1.2;
   }
@@ -183,7 +183,7 @@
   .weather-high, .weather-low {
     display: flex;
     justify-content: space-between;
-    min-width: 3em;
+    min-width: 2.5em;
   }
 
   .weather-low { color: #3b82f6; }
@@ -208,7 +208,7 @@
     background: transparent;
     font-family: inherit;
     font-size: var(--text-sm);
-    font-weight: 500;
+    font-weight: 400;
     color: var(--muted-foreground);
     cursor: pointer;
     border-radius: var(--radius-sm);
@@ -219,13 +219,12 @@
     gap: 5px;
   }
 
-  .toggle-btn:hover { color: var(--foreground); }
+  .toggle-btn:hover { color: var(--foreground); background: rgba(0, 0, 0, 0.04); }
 
   .toggle-btn.active {
-    background: var(--card);
-    color: var(--foreground);
+    background: var(--primary);
+    color: var(--primary-foreground);
     font-weight: 600;
-    box-shadow: var(--shadow);
   }
 
   .toggle-btn .tab-dot {
@@ -244,32 +243,36 @@
   /* Day selector */
   .day-selector {
     display: flex;
-    gap: var(--space-1);
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-1);
     margin-bottom: var(--space-3);
+    gap: 2px;
   }
 
   .day-btn {
     flex: 1;
     min-height: 44px;
-    padding: 10px 0 8px;
+    padding: 10px 0;
     border: none;
     background: transparent;
     border-radius: var(--radius-sm);
     font-family: inherit;
     font-size: var(--text-sm);
-    font-weight: 500;
+    font-weight: 400;
     color: var(--muted-foreground);
     cursor: pointer;
     transition: all var(--transition);
     display: flex;
-    flex-direction: column;
     align-items: center;
+    justify-content: center;
   }
 
-  .day-btn:hover { color: var(--foreground); background: var(--background); }
+  .day-btn:hover { color: var(--foreground); background: rgba(0, 0, 0, 0.04); }
 
   .day-btn.active {
-    background: var(--foreground);
+    background: var(--primary);
     color: var(--primary-foreground);
     font-weight: 600;
   }
