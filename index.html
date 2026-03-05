@@ -596,6 +596,16 @@
   .side-card.sc-school .badge-arrive { background: var(--school); }
   .side-card.sc-school .badge-leave { color: var(--school); border-color: var(--school); }
 
+  /* Glow effect for next upcoming card */
+  @keyframes cardGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.0), var(--shadow-sm); }
+    50% { box-shadow: 0 0 12px 3px rgba(245, 158, 11, 0.22), 0 0 4px 1px rgba(245, 158, 11, 0.1), var(--shadow-sm); }
+  }
+  .side-card.glow-next {
+    animation: cardGlow 2s ease-in-out infinite;
+    border-left-width: 4px;
+  }
+
   /* Empty */
   .empty-state {
     text-align: center;
@@ -1079,6 +1089,48 @@ function renderNowIndicator(scrollToCenter) {
 
   if (scrollToCenter) {
     indicator.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  applyGlowToNextCards();
+}
+
+function applyGlowToNextCards() {
+  document.querySelectorAll('.glow-next').forEach(el => el.classList.remove('glow-next'));
+
+  if (currentChild !== 'both' || !isToday()) return;
+  if (_sideRows.length === 0) return;
+
+  const nowMin = getCurrentMinutes();
+
+  let nextRowIdx = -1;
+  for (let i = 0; i < _sideRows.length; i++) {
+    const row = _sideRows[i];
+    const rowTime = parseTime((row.left || row.right).time);
+    if (rowTime >= nowMin) {
+      nextRowIdx = i;
+      break;
+    }
+  }
+
+  if (nextRowIdx === -1) return;
+
+  const sbs = document.querySelector('.side-by-side');
+  if (!sbs) return;
+
+  const leftCol = sbs.querySelector('.side-col-left');
+  const rightCol = sbs.querySelector('.side-col-right');
+  if (!leftCol || !rightCol) return;
+
+  const leftCells = leftCol.querySelectorAll('.side-cell, .side-cell-empty');
+  const rightCells = rightCol.querySelectorAll('.side-cell, .side-cell-empty');
+
+  if (leftCells[nextRowIdx]) {
+    const card = leftCells[nextRowIdx].querySelector('.side-card');
+    if (card) card.classList.add('glow-next');
+  }
+  if (rightCells[nextRowIdx]) {
+    const card = rightCells[nextRowIdx].querySelector('.side-card');
+    if (card) card.classList.add('glow-next');
   }
 }
 
