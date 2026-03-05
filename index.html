@@ -249,7 +249,7 @@
   }
 
   .summary-badge-yoonwoo { background: var(--foreground); }
-  .summary-badge-jun { background: var(--foreground); }
+  .summary-badge-jun { background: var(--foreground); word-spacing: 0.25em; }
 
   /* Schedule area */
   .schedule-area {
@@ -416,15 +416,30 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    position: relative;
+  }
+
+  .side-col::after {
+    content: '';
+    position: absolute;
+    top: 40px;
+    bottom: 12px;
+    width: 2px;
+    background: var(--border);
+    z-index: 0;
   }
 
   .side-col-left {
-    position: relative;
     padding: 6px 8px 6px 0;
   }
+  .side-col-left::after {
+    left: calc(50% - 4px);
+  }
   .side-col-right {
-    position: relative;
     padding: 6px 0 6px 8px;
+  }
+  .side-col-right::after {
+    left: calc(50% + 4px);
   }
 
   .side-divider {
@@ -466,7 +481,7 @@
     0%, 100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(239,68,68,0.25); }
     50% { transform: scale(1.2); box-shadow: 0 0 0 6px rgba(239,68,68,0.15), 0 0 10px rgba(239,68,68,0.2); }
   }
-  .side-card.is-past {
+  .side-card.is-past > * {
     opacity: 0.4;
     transition: opacity 300ms ease;
   }
@@ -476,6 +491,8 @@
   }
 
   .side-card {
+    position: relative;
+    z-index: 1;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
