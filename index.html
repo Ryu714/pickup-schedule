@@ -158,12 +158,20 @@
   }
 
   .weather-icon {
-    font-size: 1.55rem;
+    font-size: 1rem;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    color: var(--muted-foreground);
+  }
+
+  .weather-icon svg {
+    width: 18px;
+    height: 18px;
   }
 
   .weather-temp {
-    font-size: 1.625rem;
+    font-size: 1.0625rem;
     font-weight: 600;
     color: var(--foreground);
     letter-spacing: -0.02em;
@@ -173,9 +181,9 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 1px;
-    margin-left: 10px;
-    font-size: 0.9375rem;
+    gap: 0;
+    margin-left: 6px;
+    font-size: 0.75rem;
     font-weight: 500;
     line-height: 1.2;
   }
@@ -240,8 +248,8 @@
     letter-spacing: 0.03em;
   }
 
-  .summary-badge-yoonwoo { background: #10b981; }
-  .summary-badge-jun { background: #2563eb; }
+  .summary-badge-yoonwoo { background: var(--foreground); }
+  .summary-badge-jun { background: var(--foreground); }
 
   /* Schedule area */
   .schedule-area {
@@ -412,17 +420,11 @@
 
   .side-col-left {
     position: relative;
-    padding: 6px 8px 6px 6px;
-    background: rgba(16, 185, 129, 0.06);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    border-radius: var(--radius-md);
+    padding: 6px 8px 6px 0;
   }
   .side-col-right {
     position: relative;
-    padding: 6px 6px 6px 8px;
-    background: rgba(37, 99, 235, 0.06);
-    border: 1px solid rgba(37, 99, 235, 0.2);
-    border-radius: var(--radius-md);
+    padding: 6px 0 6px 8px;
   }
 
   .side-divider {
@@ -464,15 +466,9 @@
     0%, 100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(239,68,68,0.25); }
     50% { transform: scale(1.2); box-shadow: 0 0 0 6px rgba(239,68,68,0.15), 0 0 10px rgba(239,68,68,0.2); }
   }
-  .now-dimming {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 9;
-    pointer-events: none;
-    border-radius: var(--radius-md);
-    background: linear-gradient(to bottom, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.6) 60%, rgba(255,255,255,0) 100%);
+  .side-card.is-past {
+    opacity: 0.4;
+    transition: opacity 300ms ease;
   }
 
   .side-row {
@@ -481,13 +477,13 @@
 
   .side-card {
     background: var(--card);
-    border: none;
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 10px 10px;
     min-height: 74px;
     border-left: 3px solid var(--border);
     box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--transition);
+    transition: all 150ms ease;
   }
 
   .side-card:active {
@@ -496,8 +492,14 @@
 
   @media (hover: hover) {
     .side-card:hover {
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
     }
+  }
+
+  .side-card:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 
   .side-card .event-time {
@@ -616,9 +618,7 @@
     .side-col-left { padding-right: 6px; padding-left: 6px; }
     .side-col-right { padding-left: 6px; padding-right: 6px; }
     .weather-widget { padding: 3px 8px; }
-    .weather-icon { font-size: 1.125rem; }
-    .weather-temp { font-size: 1.25rem; }
-    .weather-range { font-size: 0.75rem; margin-left: 4px; }
+    .weather-range { font-size: 0.6875rem; margin-left: 4px; }
   }
 
   @media (max-width: 360px) {
@@ -889,7 +889,7 @@ function estimateCardHeight(ev) {
 function renderNowIndicator(scrollToCenter) {
   const existing = document.querySelector('.now-indicator');
   if (existing) existing.remove();
-  document.querySelectorAll('.now-dimming').forEach(el => el.remove());
+  document.querySelectorAll('.is-past').forEach(el => el.classList.remove('is-past'));
 
   if (!isToday()) return;
 
@@ -950,13 +950,14 @@ function renderNowIndicator(scrollToCenter) {
   `;
   sbs.appendChild(indicator);
 
-  if (indicatorY > 0) {
-    [leftCol, rightCol].forEach(col => {
-      const dimming = document.createElement('div');
-      dimming.className = 'now-dimming';
-      dimming.style.height = indicatorY + 'px';
-      col.appendChild(dimming);
-    });
+  // 지난 카드에 is-past 클래스 적용
+  for (let i = 0; i < rowTimes.length; i++) {
+    if (rowTimes[i] < nowMin) {
+      const lCard = leftCells[i] && leftCells[i].querySelector('.side-card');
+      const rCard = rightCells[i] && rightCells[i].querySelector('.side-card');
+      if (lCard) lCard.classList.add('is-past');
+      if (rCard) rCard.classList.add('is-past');
+    }
   }
 
   if (scrollToCenter) {
@@ -1035,36 +1036,48 @@ render();
 const WEATHER_LAT = 37.4095;
 const WEATHER_LON = 127.2553;
 
+const SVG_ICON = (d) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const WI = {
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+  cloudSun: '<path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/>',
+  cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+  fog: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M22 10H2"/><path d="M22 14H2"/>',
+  drizzle: '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 19v1"/><path d="M8 14v1"/><path d="M16 19v1"/><path d="M16 14v1"/><path d="M12 21v1"/><path d="M12 16v1"/>',
+  rain: '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/>',
+  snow: '<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 15h.01"/><path d="M8 19h.01"/><path d="M12 17h.01"/><path d="M12 21h.01"/><path d="M16 15h.01"/><path d="M16 19h.01"/>',
+  snowflake: '<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>',
+  thunder: '<path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/>',
+};
 const WMO_WEATHER = {
-  0: { icon: '☀️', label: '맑음' },
-  1: { icon: '🌤', label: '대체로 맑음' },
-  2: { icon: '⛅', label: '구름 조금' },
-  3: { icon: '☁️', label: '흐림' },
-  45: { icon: '🌫', label: '안개' },
-  48: { icon: '🌫', label: '안개' },
-  51: { icon: '🌦', label: '이슬비' },
-  53: { icon: '🌧', label: '비' },
-  55: { icon: '🌧', label: '비' },
-  61: { icon: '🌧', label: '비' },
-  63: { icon: '🌧', label: '비' },
-  65: { icon: '🌧', label: '폭우' },
-  71: { icon: '🌨', label: '눈' },
-  73: { icon: '🌨', label: '눈' },
-  75: { icon: '❄️', label: '폭설' },
-  77: { icon: '❄️', label: '폭설' },
-  80: { icon: '🌦', label: '소나기' },
-  81: { icon: '🌧', label: '소나기' },
-  82: { icon: '⛈', label: '폭우' },
-  85: { icon: '🌨', label: '눈' },
-  86: { icon: '❄️', label: '폭설' },
-  95: { icon: '⛈', label: '뇌우' },
-  96: { icon: '⛈', label: '뇌우' },
-  99: { icon: '⛈', label: '뇌우' },
+  0: { icon: SVG_ICON(WI.sun), label: '맑음' },
+  1: { icon: SVG_ICON(WI.cloudSun), label: '대체로 맑음' },
+  2: { icon: SVG_ICON(WI.cloudSun), label: '구름 조금' },
+  3: { icon: SVG_ICON(WI.cloud), label: '흐림' },
+  45: { icon: SVG_ICON(WI.fog), label: '안개' },
+  48: { icon: SVG_ICON(WI.fog), label: '안개' },
+  51: { icon: SVG_ICON(WI.drizzle), label: '이슬비' },
+  53: { icon: SVG_ICON(WI.rain), label: '비' },
+  55: { icon: SVG_ICON(WI.rain), label: '비' },
+  61: { icon: SVG_ICON(WI.rain), label: '비' },
+  63: { icon: SVG_ICON(WI.rain), label: '비' },
+  65: { icon: SVG_ICON(WI.rain), label: '폭우' },
+  71: { icon: SVG_ICON(WI.snow), label: '눈' },
+  73: { icon: SVG_ICON(WI.snow), label: '눈' },
+  75: { icon: SVG_ICON(WI.snowflake), label: '폭설' },
+  77: { icon: SVG_ICON(WI.snowflake), label: '폭설' },
+  80: { icon: SVG_ICON(WI.drizzle), label: '소나기' },
+  81: { icon: SVG_ICON(WI.rain), label: '소나기' },
+  82: { icon: SVG_ICON(WI.thunder), label: '폭우' },
+  85: { icon: SVG_ICON(WI.snow), label: '눈' },
+  86: { icon: SVG_ICON(WI.snowflake), label: '폭설' },
+  95: { icon: SVG_ICON(WI.thunder), label: '뇌우' },
+  96: { icon: SVG_ICON(WI.thunder), label: '뇌우' },
+  99: { icon: SVG_ICON(WI.thunder), label: '뇌우' },
 };
 
 function renderWeather(data) {
   const info = WMO_WEATHER[data.code] || { icon: '☁️', label: '날씨' };
-  document.getElementById('weatherIcon').textContent = info.icon;
+  document.getElementById('weatherIcon').innerHTML = info.icon;
   document.getElementById('weatherTemp').textContent = data.temp + '°';
   document.getElementById('weatherLow').textContent = data.min + '°';
   document.getElementById('weatherHigh').textContent = data.max + '°';
