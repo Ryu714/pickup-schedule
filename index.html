@@ -55,25 +55,6 @@
     /* Transition */
     --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Academy Colors */
-    --english: #2563eb;
-    --english-bg: #eff6ff;
-    --piano: #c026d3;
-    --piano-bg: #faf5ff;
-    --science: #059669;
-    --science-bg: #ecfdf5;
-    --soccer: #ca8a04;
-    --soccer-bg: #fefce8;
-    --art: #7c3aed;
-    --art-bg: #f5f3ff;
-    --baduk: #0891b2;
-    --baduk-bg: #ecfeff;
-    --froebel: #ea580c;
-    --froebel-bg: #fff7ed;
-    --kinder: #f472b6;
-    --kinder-bg: #fdf2f8;
-    --school: #64748b;
-    --school-bg: #f1f5f9;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -331,12 +312,14 @@
   }
 
   .badge-arrive {
+    background: var(--foreground);
     color: #fff;
   }
 
   .badge-leave {
     background: transparent;
-    border: 1.5px solid;
+    border: 1.5px solid var(--foreground);
+    color: var(--foreground);
   }
 
   .event-name {
@@ -354,42 +337,7 @@
 
   .text-warn { color: var(--destructive); font-weight: 600; }
 
-  /* Color assignments */
-  .ev-english .event-card { border-left-color: var(--english); }
-  .ev-english .badge-arrive { background: var(--english); }
-  .ev-english .badge-leave { color: var(--english); border-color: var(--english); }
-
-  .ev-piano .event-card { border-left-color: var(--piano); }
-  .ev-piano .badge-arrive { background: var(--piano); }
-  .ev-piano .badge-leave { color: var(--piano); border-color: var(--piano); }
-
-  .ev-science .event-card { border-left-color: var(--science); }
-  .ev-science .badge-arrive { background: var(--science); }
-  .ev-science .badge-leave { color: var(--science); border-color: var(--science); }
-
-  .ev-soccer .event-card { border-left-color: var(--soccer); }
-  .ev-soccer .badge-arrive { background: var(--soccer); }
-  .ev-soccer .badge-leave { color: var(--soccer); border-color: var(--soccer); }
-
-  .ev-art .event-card { border-left-color: var(--art); }
-  .ev-art .badge-arrive { background: var(--art); }
-  .ev-art .badge-leave { color: var(--art); border-color: var(--art); }
-
-  .ev-baduk .event-card { border-left-color: var(--baduk); }
-  .ev-baduk .badge-arrive { background: var(--baduk); }
-  .ev-baduk .badge-leave { color: var(--baduk); border-color: var(--baduk); }
-
-  .ev-froebel .event-card { border-left-color: var(--froebel); }
-  .ev-froebel .badge-arrive { background: var(--froebel); }
-  .ev-froebel .badge-leave { color: var(--froebel); border-color: var(--froebel); }
-
-  .ev-kinder .event-card { border-left-color: var(--kinder); }
-  .ev-kinder .badge-arrive { background: var(--kinder); }
-  .ev-kinder .badge-leave { color: var(--kinder); border-color: var(--kinder); }
-
-  .ev-school .event-card { border-left-color: var(--school); }
-  .ev-school .badge-arrive { background: var(--school); }
-  .ev-school .badge-leave { color: var(--school); border-color: var(--school); }
+  /* Color assignments — border-left, badge 모두 foreground 통일 */
 
   /* Side by Side (함께보기) */
   .side-by-side {
@@ -498,13 +446,9 @@
     border-radius: var(--radius-sm);
     padding: 10px 10px;
     min-height: 74px;
-    border-left: 3px solid var(--border);
+    border-left: 3px solid var(--foreground);
     box-shadow: var(--shadow-sm);
     transition: all 150ms ease;
-  }
-
-  .side-card:active {
-    transform: scale(0.985);
   }
 
   @media (hover: hover) {
@@ -512,6 +456,10 @@
       box-shadow: var(--shadow-md);
       transform: translateY(-1px);
     }
+  }
+
+  .side-card:active {
+    transform: translateY(-1px) scale(0.985);
   }
 
   .side-card:focus-visible {
@@ -536,42 +484,6 @@
     padding: 1px 6px;
   }
 
-  /* Color for side cards */
-  .side-card.sc-english { border-left-color: var(--english); }
-  .side-card.sc-english .badge-arrive { background: var(--english); }
-  .side-card.sc-english .badge-leave { color: var(--english); border-color: var(--english); }
-
-  .side-card.sc-piano { border-left-color: var(--piano); }
-  .side-card.sc-piano .badge-arrive { background: var(--piano); }
-  .side-card.sc-piano .badge-leave { color: var(--piano); border-color: var(--piano); }
-
-  .side-card.sc-science { border-left-color: var(--science); }
-  .side-card.sc-science .badge-arrive { background: var(--science); }
-  .side-card.sc-science .badge-leave { color: var(--science); border-color: var(--science); }
-
-  .side-card.sc-soccer { border-left-color: var(--soccer); }
-  .side-card.sc-soccer .badge-arrive { background: var(--soccer); }
-  .side-card.sc-soccer .badge-leave { color: var(--soccer); border-color: var(--soccer); }
-
-  .side-card.sc-art { border-left-color: var(--art); }
-  .side-card.sc-art .badge-arrive { background: var(--art); }
-  .side-card.sc-art .badge-leave { color: var(--art); border-color: var(--art); }
-
-  .side-card.sc-baduk { border-left-color: var(--baduk); }
-  .side-card.sc-baduk .badge-arrive { background: var(--baduk); }
-  .side-card.sc-baduk .badge-leave { color: var(--baduk); border-color: var(--baduk); }
-
-  .side-card.sc-froebel { border-left-color: var(--froebel); }
-  .side-card.sc-froebel .badge-arrive { background: var(--froebel); }
-  .side-card.sc-froebel .badge-leave { color: var(--froebel); border-color: var(--froebel); }
-
-  .side-card.sc-kinder { border-left-color: var(--kinder); }
-  .side-card.sc-kinder .badge-arrive { background: var(--kinder); }
-  .side-card.sc-kinder .badge-leave { color: var(--kinder); border-color: var(--kinder); }
-
-  .side-card.sc-school { border-left-color: var(--school); }
-  .side-card.sc-school .badge-arrive { background: var(--school); }
-  .side-card.sc-school .badge-leave { color: var(--school); border-color: var(--school); }
 
   /* Glow effect for next upcoming card */
   @keyframes cardGlow {
@@ -594,12 +506,19 @@
 
   /* Fade transition */
   .fade-enter {
-    animation: fadeContent 200ms var(--transition);
+    animation: fadeIn 200ms var(--transition);
+  }
+  .fade-exit {
+    animation: fadeOut 150ms var(--transition) forwards;
   }
 
-  @keyframes fadeContent {
+  @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
   }
 
   /* Accessibility */
@@ -779,11 +698,18 @@ function formatTime(t) {
 }
 
 function selectDay(day) {
+  if (day === currentDay) return;
   currentDay = day;
   document.querySelectorAll('.day-btn').forEach((btn, i) => {
     btn.classList.toggle('active', DAYS[i] === day);
   });
-  render();
+  const area = document.getElementById('scheduleArea');
+  area.classList.add('fade-exit');
+  area.addEventListener('animationend', function handler() {
+    area.removeEventListener('animationend', handler);
+    area.classList.remove('fade-exit');
+    render();
+  }, { once: true });
 }
 
 function renderDays() {
@@ -946,9 +872,9 @@ function renderNowIndicator(scrollToCenter) {
 
   let indicatorY;
   if (nowMin <= rowPositions[0].timeMin) {
-    indicatorY = rowPositions[0].top;
+    indicatorY = rowPositions[0].top - 6;
   } else if (nowMin > rowPositions[rowPositions.length - 1].timeMin) {
-    indicatorY = rowPositions[rowPositions.length - 1].bottom;
+    indicatorY = rowPositions[rowPositions.length - 1].bottom + 6;
   } else {
     let beforeIdx = 0;
     for (let i = 0; i < rowPositions.length; i++) {
