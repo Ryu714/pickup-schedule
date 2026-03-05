@@ -264,7 +264,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
   }
 
   .day-btn:hover { color: var(--foreground); background: var(--background); }
@@ -273,23 +272,6 @@
     background: var(--foreground);
     color: var(--primary-foreground);
     font-weight: 600;
-  }
-
-  .day-btn.active .day-dots span { background: var(--primary-foreground); opacity: 0.6; }
-
-  .day-dots {
-    display: flex;
-    gap: 3px;
-    height: 5px;
-    align-items: center;
-  }
-
-  .day-dots span {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--muted-foreground);
-    opacity: 0.35;
   }
 
   /* Summary bar */
@@ -713,9 +695,9 @@
     .side-col-left { padding-right: 6px; padding-left: 6px; }
     .side-col-right { padding-left: 6px; padding-right: 6px; }
     .weather-widget { padding: 3px 8px; }
-    .weather-icon { font-size: 1rem; }
-    .weather-temp { font-size: 1.125rem; }
-    .weather-range { font-size: 0.625rem; margin-left: 4px; }
+    .weather-icon { font-size: 1.125rem; }
+    .weather-temp { font-size: 1.25rem; }
+    .weather-range { font-size: 0.75rem; margin-left: 4px; }
   }
 
   @media (max-width: 360px) {
@@ -912,21 +894,9 @@ function selectDay(day) {
 }
 
 function renderDays() {
-  document.getElementById('daySelector').innerHTML = DAYS.map(d => {
-    let count;
-    if (currentChild === 'both') {
-      count = (DATA.yoonwoo.schedule[d] || []).length + (DATA.jun.schedule[d] || []).length;
-    } else {
-      count = (DATA[currentChild].schedule[d] || []).length;
-    }
-    const dots = Math.min(count, 3);
-    const dotHtml = dots > 0
-      ? '<div class="day-dots">' + Array.from({length: dots}, () => '<span></span>').join('') + '</div>'
-      : '<div class="day-dots"></div>';
-    return `<button class="day-btn ${d === currentDay ? 'active' : ''}" onclick="selectDay('${d}')">
-      ${d}${dotHtml}
-    </button>`;
-  }).join('');
+  document.getElementById('daySelector').innerHTML = DAYS.map(d =>
+    `<button class="day-btn ${d === currentDay ? 'active' : ''}" onclick="selectDay('${d}')">${d}</button>`
+  ).join('');
 }
 
 function buildEventCard(ev) {
