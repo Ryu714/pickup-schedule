@@ -189,57 +189,6 @@
   .weather-low { color: #3b82f6; }
   .weather-high { color: #ef4444; }
 
-  /* Segmented Control (3 tabs) */
-  .toggle-bar {
-    display: flex;
-    background: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: var(--space-1);
-    margin-bottom: var(--space-3);
-    gap: 2px;
-  }
-
-  .toggle-btn {
-    flex: 1;
-    min-height: 44px;
-    padding: 10px 0;
-    border: none;
-    background: transparent;
-    font-family: inherit;
-    font-size: var(--text-sm);
-    font-weight: 400;
-    color: var(--muted-foreground);
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-  }
-
-  .toggle-btn:hover { color: var(--foreground); background: rgba(0, 0, 0, 0.04); }
-
-  .toggle-btn.active {
-    background: var(--primary);
-    color: var(--primary-foreground);
-    font-weight: 600;
-  }
-
-  .toggle-btn .tab-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .toggle-btn svg {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-  }
-
   /* Day selector */
   .day-selector {
     display: flex;
@@ -700,21 +649,6 @@
     </div>
   </header>
 
-  <nav class="toggle-bar" role="tablist" aria-label="보기 모드">
-    <button class="toggle-btn active" role="tab" aria-selected="true" onclick="switchChild('both')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-      함께보기
-    </button>
-    <button class="toggle-btn" role="tab" aria-selected="false" onclick="switchChild('yoonwoo')">
-      <span class="tab-dot" style="background:#10b981"></span>
-      최윤우
-    </button>
-    <button class="toggle-btn" role="tab" aria-selected="false" onclick="switchChild('jun')">
-      <span class="tab-dot" style="background:#2563eb"></span>
-      류준
-    </button>
-  </nav>
-
   <div class="day-selector" id="daySelector" role="tablist" aria-label="요일 선택"></div>
 
   <main class="schedule-area" id="scheduleArea" aria-live="polite"></main>
@@ -796,7 +730,6 @@ const DATA = {
   }
 };
 
-let currentChild = 'both';
 let currentDay = '월';
 let _sideRows = [];
 const todayIdx = new Date().getDay();
@@ -826,19 +759,6 @@ function formatTime(t) {
   return prefix + ' ' + t;
 }
 
-function switchChild(child) {
-  currentChild = child;
-  document.querySelectorAll('.toggle-btn').forEach((btn, i) => {
-    const isActive = (i === 0 && child === 'both') ||
-      (i === 1 && child === 'yoonwoo') ||
-      (i === 2 && child === 'jun');
-    btn.classList.toggle('active', isActive);
-    btn.setAttribute('aria-selected', isActive);
-  });
-  renderDays();
-  render();
-}
-
 function selectDay(day) {
   currentDay = day;
   document.querySelectorAll('.day-btn').forEach((btn, i) => {
@@ -851,17 +771,6 @@ function renderDays() {
   document.getElementById('daySelector').innerHTML = DAYS.map(d =>
     `<button class="day-btn ${d === currentDay ? 'active' : ''}" onclick="selectDay('${d}')">${d}</button>`
   ).join('');
-}
-
-function buildEventCard(ev) {
-  const badgeDot = ev.dir === 'arrive' ? '●' : '○';
-  const badgeClass = ev.dir === 'arrive' ? 'badge-arrive' : 'badge-leave';
-  return `<div class="event-card-header">
-    <span class="event-time">${formatTime(ev.time)}</span>
-    <span class="event-badge ${badgeClass}">${badgeDot} ${ev.badge}</span>
-  </div>
-  <div class="event-name">${ev.name}</div>
-  ${ev.detail ? `<div class="event-detail">${ev.detail}</div>` : ''}`;
 }
 
 function buildSideCard(ev) {
@@ -883,30 +792,7 @@ function render() {
   void area.offsetWidth; // force reflow
   area.classList.add('fade-enter');
 
-  if (currentChild === 'both') {
-    renderBoth();
-  } else {
-    renderSingle();
-  }
-}
-
-function renderSingle() {
-  const events = DATA[currentChild].schedule[currentDay] || [];
-  const area = document.getElementById('scheduleArea');
-
-  if (events.length === 0) {
-    area.innerHTML = `<div class="empty-state">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      <p>이 날은 일정이 없습니다</p>
-    </div>`;
-    return;
-  }
-
-  area.innerHTML = '<div class="schedule-list">' + events.map((ev, i) => {
-    return `<div class="schedule-item ev-${ev.type}" style="animation-delay:${i * 40}ms">
-      <div class="event-card">${buildEventCard(ev)}</div>
-    </div>`;
-  }).join('') + '</div>';
+  renderBoth();
 }
 
 function renderBoth() {
@@ -1005,7 +891,7 @@ function renderNowIndicator(scrollToCenter) {
   if (existing) existing.remove();
   document.querySelectorAll('.now-dimming').forEach(el => el.remove());
 
-  if (currentChild !== 'both' || !isToday()) return;
+  if (!isToday()) return;
 
   const sbs = document.querySelector('.side-by-side');
   if (!sbs || _sideRows.length === 0) return;
@@ -1083,7 +969,7 @@ function renderNowIndicator(scrollToCenter) {
 function applyGlowToNextCards() {
   document.querySelectorAll('.glow-next').forEach(el => el.classList.remove('glow-next'));
 
-  if (currentChild !== 'both' || !isToday()) return;
+  if (!isToday()) return;
   if (_sideRows.length === 0) return;
 
   const nowMin = getCurrentMinutes();
@@ -1124,10 +1010,10 @@ function applyGlowToNextCards() {
 function scheduleMinuteSync() {
   const msToNextMin = (60 - new Date().getSeconds()) * 1000;
   setTimeout(() => {
-    if (currentChild === 'both' && isToday()) renderNowIndicator();
+    if (isToday()) renderNowIndicator();
     applyGlowToNextCards();
     setInterval(() => {
-      if (currentChild === 'both' && isToday()) renderNowIndicator();
+      if (isToday()) renderNowIndicator();
       applyGlowToNextCards();
     }, 60000);
   }, msToNextMin);
