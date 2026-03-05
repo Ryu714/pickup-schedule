@@ -556,8 +556,8 @@
 
   /* Glow effect for next upcoming card */
   @keyframes cardGlow {
-    0%, 100% { box-shadow: 0 0 4px 1px rgba(245, 158, 11, 0.08), var(--shadow-sm); }
-    50% { box-shadow: 0 0 18px 5px rgba(245, 158, 11, 0.4), 0 0 6px 2px rgba(245, 158, 11, 0.2), var(--shadow-sm); }
+    0%, 100% { box-shadow: 0 0 4px 1px rgba(245, 158, 11, 0.15), var(--shadow-sm); }
+    50% { box-shadow: 0 0 20px 6px rgba(245, 158, 11, 0.55), 0 0 8px 3px rgba(245, 158, 11, 0.3), var(--shadow-sm); }
   }
   .side-card.glow-next {
     animation: cardGlow 2s ease-in-out infinite;
@@ -996,14 +996,22 @@ function applyGlowToNextCards() {
   const leftCells = leftCol.querySelectorAll('.side-cell, .side-cell-empty');
   const rightCells = rightCol.querySelectorAll('.side-cell, .side-cell-empty');
 
+  const glowCards = [];
   if (leftCells[nextRowIdx]) {
     const card = leftCells[nextRowIdx].querySelector('.side-card');
-    if (card) card.classList.add('glow-next');
+    if (card) glowCards.push(card);
   }
   if (rightCells[nextRowIdx]) {
     const card = rightCells[nextRowIdx].querySelector('.side-card');
-    if (card) card.classList.add('glow-next');
+    if (card) glowCards.push(card);
   }
+  // 도트와 동기화: 애니메이션 리셋 후 동일 프레임에서 시작
+  glowCards.forEach(card => {
+    card.style.animation = 'none';
+    card.offsetHeight; // force reflow
+    card.style.animation = '';
+    card.classList.add('glow-next');
+  });
 }
 
 // 정분(XX:00)에 맞춰 갱신 동기화
