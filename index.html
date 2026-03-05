@@ -705,8 +705,7 @@ function selectDay(day) {
   });
   const area = document.getElementById('scheduleArea');
   area.classList.add('fade-exit');
-  area.addEventListener('animationend', function handler() {
-    area.removeEventListener('animationend', handler);
+  area.addEventListener('animationend', () => {
     area.classList.remove('fade-exit');
     render();
   }, { once: true });
@@ -721,7 +720,7 @@ function renderDays() {
 function buildSideCard(ev) {
   const badgeDot = ev.dir === 'arrive' ? '●' : '○';
   const badgeClass = ev.dir === 'arrive' ? 'badge-arrive' : 'badge-leave';
-  return `<div class="side-card sc-${ev.type}">
+  return `<div class="side-card">
     <div class="event-card-header">
       <span class="event-time">${formatTime(ev.time)}</span>
       <span class="event-badge ${badgeClass}">${badgeDot} ${ev.badge}</span>
@@ -832,13 +831,14 @@ function estimateCardHeight(ev) {
 }
 
 function renderNowIndicator(scrollToCenter) {
-  const existing = document.querySelector('.now-indicator');
-  if (existing) existing.remove();
-  document.querySelectorAll('.is-past').forEach(el => el.classList.remove('is-past'));
+  const sbs = document.querySelector('.side-by-side');
+  if (sbs) {
+    const existing = sbs.querySelector('.now-indicator');
+    if (existing) existing.remove();
+    sbs.querySelectorAll('.is-past').forEach(el => el.classList.remove('is-past'));
+  }
 
   if (!isToday()) return;
-
-  const sbs = document.querySelector('.side-by-side');
   if (!sbs || _sideRows.length === 0) return;
 
   const nowMin = getCurrentMinutes();
@@ -965,10 +965,10 @@ function scheduleMinuteSync() {
   const msToNextMin = (60 - new Date().getSeconds()) * 1000;
   setTimeout(() => {
     if (isToday()) renderNowIndicator();
-    applyGlowToNextCards();
+    else applyGlowToNextCards();
     setInterval(() => {
       if (isToday()) renderNowIndicator();
-      applyGlowToNextCards();
+      else applyGlowToNextCards();
     }, 60000);
   }, msToNextMin);
 }
