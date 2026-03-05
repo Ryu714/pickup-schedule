@@ -128,6 +128,64 @@
     margin-left: 6px;
   }
 
+  /* Weather Widget */
+  .weather-widget {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 4px 10px;
+    background: var(--muted);
+    border-radius: 999px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    contain: layout style;
+    white-space: nowrap;
+    font-family: 'Geist', sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .weather-widget.loaded { opacity: 1; }
+
+  .weather-now {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .weather-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+
+  .weather-temp {
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: var(--foreground);
+    letter-spacing: -0.02em;
+  }
+
+  .weather-range {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    margin-left: 10px;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  .weather-high, .weather-low {
+    display: flex;
+    justify-content: space-between;
+    min-width: 3em;
+  }
+
+  .weather-low { color: #3b82f6; }
+  .weather-high { color: #ef4444; }
+
   /* Segmented Control (3 tabs) */
   .toggle-bar {
     display: flex;
@@ -651,10 +709,16 @@
     .side-card .event-badge { font-size: 0.625rem; padding: 1px 5px; }
     .side-col-left { padding-right: 6px; padding-left: 6px; }
     .side-col-right { padding-left: 6px; padding-right: 6px; }
+    .weather-widget { padding: 3px 8px; }
+    .weather-icon { font-size: 1rem; }
+    .weather-temp { font-size: 1.125rem; }
+    .weather-range { font-size: 0.625rem; margin-left: 4px; }
   }
 
   @media (max-width: 360px) {
     .side-card .event-detail { display: none; }
+    .header .period { display: none; }
+    .weather-range { display: none; }
   }
   </style>
 </head>
@@ -666,6 +730,17 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
       </div>
       <h1>등하원 시간표 <span class="period">2026년 3–4월</span></h1>
+      <aside class="weather-widget" id="weatherWidget" role="status" aria-label="현재 날씨" aria-live="polite" aria-atomic="true">
+        <div class="weather-now">
+          <span class="weather-icon" id="weatherIcon" aria-hidden="true"></span>
+          <span class="weather-temp" id="weatherTemp"></span>
+        </div>
+        <div class="weather-range" id="weatherRange">
+          <span class="weather-high"><span class="weather-arrow">↑</span><span id="weatherHigh"></span></span>
+          <span class="weather-low"><span class="weather-arrow">↓</span><span id="weatherLow"></span></span>
+        </div>
+        <span class="sr-only" id="weatherSr"></span>
+      </aside>
     </div>
   </header>
 
@@ -1157,6 +1232,83 @@ scheduleMinuteSync();
 
 renderDays();
 render();
+
+// ─── Weather Widget ───
+const WEATHER_LAT = 37.4095;
+const WEATHER_LON = 127.2553;
+
+const WMO_WEATHER = {
+  0: { icon: '☀️', label: '맑음' },
+  1: { icon: '🌤', label: '대체로 맑음' },
+  2: { icon: '⛅', label: '구름 조금' },
+  3: { icon: '☁️', label: '흐림' },
+  45: { icon: '🌫', label: '안개' },
+  48: { icon: '🌫', label: '안개' },
+  51: { icon: '🌦', label: '이슬비' },
+  53: { icon: '🌧', label: '비' },
+  55: { icon: '🌧', label: '비' },
+  61: { icon: '🌧', label: '비' },
+  63: { icon: '🌧', label: '비' },
+  65: { icon: '🌧', label: '폭우' },
+  71: { icon: '🌨', label: '눈' },
+  73: { icon: '🌨', label: '눈' },
+  75: { icon: '❄️', label: '폭설' },
+  77: { icon: '❄️', label: '폭설' },
+  80: { icon: '🌦', label: '소나기' },
+  81: { icon: '🌧', label: '소나기' },
+  82: { icon: '⛈', label: '폭우' },
+  85: { icon: '🌨', label: '눈' },
+  86: { icon: '❄️', label: '폭설' },
+  95: { icon: '⛈', label: '뇌우' },
+  96: { icon: '⛈', label: '뇌우' },
+  99: { icon: '⛈', label: '뇌우' },
+};
+
+function renderWeather(data) {
+  const info = WMO_WEATHER[data.code] || { icon: '☁️', label: '날씨' };
+  document.getElementById('weatherIcon').textContent = info.icon;
+  document.getElementById('weatherTemp').textContent = data.temp + '°';
+  document.getElementById('weatherLow').textContent = data.min + '°';
+  document.getElementById('weatherHigh').textContent = data.max + '°';
+  document.getElementById('weatherSr').textContent =
+    info.label + ', 현재 ' + data.temp + '도, 최저 ' + data.min + '도, 최고 ' + data.max + '도';
+  document.getElementById('weatherWidget').classList.add('loaded');
+}
+
+async function loadWeather() {
+  const cached = localStorage.getItem('weather_cache');
+  if (cached) {
+    const { data, ts } = JSON.parse(cached);
+    if (Date.now() - ts < 10 * 60 * 1000 && data.min !== undefined) {
+      renderWeather(data);
+      return;
+    }
+  }
+
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=Asia%2FSeoul`,
+      { signal: controller.signal }
+    );
+    clearTimeout(tid);
+    const json = await res.json();
+    const data = {
+      temp: Math.round(json.current.temperature_2m),
+      code: json.current.weather_code,
+      min: Math.round(json.daily.temperature_2m_min[0]),
+      max: Math.round(json.daily.temperature_2m_max[0])
+    };
+    localStorage.setItem('weather_cache', JSON.stringify({ data, ts: Date.now() }));
+    renderWeather(data);
+  } catch (e) {
+    if (cached) renderWeather(JSON.parse(cached).data);
+  }
+}
+
+loadWeather();
+setInterval(loadWeather, 10 * 60 * 1000);
   </script>
 </body>
 </html>
