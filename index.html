@@ -70,8 +70,8 @@
     --baduk-bg: #ecfeff;
     --froebel: #ea580c;
     --froebel-bg: #fff7ed;
-    --kinder: #e11d48;
-    --kinder-bg: #fff1f2;
+    --kinder: #f472b6;
+    --kinder-bg: #fdf2f8;
     --school: #64748b;
     --school-bg: #f1f5f9;
   }
@@ -496,23 +496,22 @@
     right: 8px;
     height: 2px;
     top: -1px;
-    background: #3b82f6;
     border-radius: 1px;
+    background: #ef4444;
   }
   .now-indicator-dot {
     position: relative;
-    width: 10px;
-    height: 10px;
-    background: #3b82f6;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
+    background: #ef4444;
     border: 2.5px solid #fff;
-    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4);
     z-index: 11;
-    animation: nowPulse 2s ease-in-out infinite;
+    animation: dotPulse 2s ease-in-out infinite;
   }
-  @keyframes nowPulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25); }
-    50% { transform: scale(1.2); box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.15), 0 0 10px rgba(59, 130, 246, 0.2); }
+  @keyframes dotPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(239,68,68,0.25); }
+    50% { transform: scale(1.2); box-shadow: 0 0 0 6px rgba(239,68,68,0.15), 0 0 10px rgba(239,68,68,0.2); }
   }
   .now-dimming {
     position: absolute;
