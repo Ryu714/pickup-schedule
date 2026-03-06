@@ -705,10 +705,11 @@ function renderDays() {
   ).join('');
 }
 
-function buildSideCard(ev) {
+function buildSideCard(ev, typeColorMap) {
   const badgeDot = ev.dir === 'arrive' ? '●' : '○';
   const badgeClass = ev.dir === 'arrive' ? 'badge-arrive' : 'badge-leave';
-  return `<div class="side-card">
+  const borderColor = (typeColorMap[ev.type] || 0) % 2 === 0 ? 'var(--foreground)' : '#a1a1aa';
+  return `<div class="side-card" style="border-left-color:${borderColor}">
     <div class="event-card-header">
       <span class="event-time">${formatTime(ev.time)}</span>
       <span class="event-badge ${badgeClass}">${badgeDot} ${ev.badge}</span>
@@ -765,6 +766,18 @@ function renderBoth() {
     rows.push(row);
   }
 
+  // 아이별 type 등장순서 → 검은색/회색 번갈아 지정
+  function buildTypeColorMap(events) {
+    const map = {};
+    let idx = 0;
+    events.forEach(ev => {
+      if (!(ev.type in map)) map[ev.type] = idx++;
+    });
+    return map;
+  }
+  const leftColorMap = buildTypeColorMap(evY);
+  const rightColorMap = buildTypeColorMap(evJ);
+
   let html = `<div class="side-by-side">`;
 
   // Build left column, divider, right column
@@ -774,12 +787,12 @@ function renderBoth() {
   rows.forEach((row, idx) => {
     const delay = `style="animation-delay:${idx * 40}ms"`;
     if (row.left) {
-      leftHtml += `<div class="side-cell" ${delay}>${buildSideCard(row.left)}</div>`;
+      leftHtml += `<div class="side-cell" ${delay}>${buildSideCard(row.left, leftColorMap)}</div>`;
     } else {
       leftHtml += `<div class="side-cell-empty" ${delay}><div style="height:${estimateCardHeight(row.right)}px"></div></div>`;
     }
     if (row.right) {
-      rightHtml += `<div class="side-cell" ${delay}>${buildSideCard(row.right)}</div>`;
+      rightHtml += `<div class="side-cell" ${delay}>${buildSideCard(row.right, rightColorMap)}</div>`;
     } else {
       rightHtml += `<div class="side-cell-empty" ${delay}><div style="height:${estimateCardHeight(row.left)}px"></div></div>`;
     }
