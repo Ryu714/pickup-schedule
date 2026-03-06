@@ -61,9 +61,17 @@ jobs:
           echo "Vilag base: ${VILAG_BASE_DATE} ${VILAG_BASE_TIME}"
 
           # 초단기예보 호출 (현재 기온, 하늘상태, 강수형태)
-          ULTRA_URL="http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${KMA_API_KEY}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${KST}&base_time=${ULTRA_BASE_TIME}&nx=${NX}&ny=${NY}"
           echo "Fetching ultra short-term forecast..."
-          ULTRA_RES=$(curl -s --fail "$ULTRA_URL")
+          ULTRA_RES=$(curl -s --get "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst" \
+            --data-urlencode "serviceKey=${KMA_API_KEY}" \
+            --data-urlencode "pageNo=1" \
+            --data-urlencode "numOfRows=60" \
+            --data-urlencode "dataType=JSON" \
+            --data-urlencode "base_date=${KST}" \
+            --data-urlencode "base_time=${ULTRA_BASE_TIME}" \
+            --data-urlencode "nx=${NX}" \
+            --data-urlencode "ny=${NY}")
+          echo "Ultra response: $(echo "$ULTRA_RES" | head -c 500)"
 
           T1H=$(echo "$ULTRA_RES" | jq -r '.response.body.items.item[] | select(.category=="T1H") | .fcstValue' | head -1)
           SKY=$(echo "$ULTRA_RES" | jq -r '.response.body.items.item[] | select(.category=="SKY") | .fcstValue' | head -1)
@@ -72,9 +80,17 @@ jobs:
           echo "T1H=${T1H}, SKY=${SKY}, PTY=${PTY}"
 
           # 단기예보 호출 (최저/최고 기온)
-          VILAG_URL="http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${KMA_API_KEY}&pageNo=1&numOfRows=300&dataType=JSON&base_date=${VILAG_BASE_DATE}&base_time=${VILAG_BASE_TIME}&nx=${NX}&ny=${NY}"
           echo "Fetching village forecast..."
-          VILAG_RES=$(curl -s --fail "$VILAG_URL")
+          VILAG_RES=$(curl -s --get "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst" \
+            --data-urlencode "serviceKey=${KMA_API_KEY}" \
+            --data-urlencode "pageNo=1" \
+            --data-urlencode "numOfRows=300" \
+            --data-urlencode "dataType=JSON" \
+            --data-urlencode "base_date=${VILAG_BASE_DATE}" \
+            --data-urlencode "base_time=${VILAG_BASE_TIME}" \
+            --data-urlencode "nx=${NX}" \
+            --data-urlencode "ny=${NY}")
+          echo "Vilag response: $(echo "$VILAG_RES" | head -c 500)"
 
           TMN=$(echo "$VILAG_RES" | jq -r '.response.body.items.item[] | select(.category=="TMN") | .fcstValue' | head -1)
           TMX=$(echo "$VILAG_RES" | jq -r '.response.body.items.item[] | select(.category=="TMX") | .fcstValue' | head -1)
