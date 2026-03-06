@@ -202,20 +202,27 @@
   .weather-high { color: #ef4444; }
 
   /* Day selector */
+  .day-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--space-3);
+  }
+
   .day-selector {
     display: flex;
     background: var(--muted);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: var(--space-1);
-    margin-bottom: var(--space-3);
     gap: 2px;
+    flex: 1;
   }
 
   .day-btn {
     flex: 1;
-    min-height: 44px;
-    padding: 10px 0;
+    min-height: 36px;
+    padding: 8px 0;
     border: none;
     background: transparent;
     border-radius: var(--radius-sm);
@@ -544,26 +551,23 @@
 
   /* Theme toggle */
   .theme-toggle {
-    width: 28px;
-    height: 28px;
     border: none;
     background: var(--muted);
-    border-radius: 50%;
+    border-radius: 999px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 4px;
+    padding: 4px 6px;
     cursor: pointer;
     flex-shrink: 0;
-    color: var(--muted-foreground);
-    transition: background var(--transition), color var(--transition);
-    margin-left: 6px;
+    transition: background var(--transition);
   }
-  .theme-toggle:hover { background: var(--accent); color: var(--foreground); }
+  .theme-toggle:hover { background: var(--accent); }
   .theme-toggle svg { width: 14px; height: 14px; }
-  .theme-toggle .icon-sun { display: none; }
-  .theme-toggle .icon-moon { display: block; }
-  .dark .theme-toggle .icon-sun { display: block; }
-  .dark .theme-toggle .icon-moon { display: none; }
+  .theme-toggle .icon-sun { color: var(--foreground); opacity: 1; }
+  .theme-toggle .icon-moon { color: var(--muted-foreground); opacity: 0.3; }
+  .dark .theme-toggle .icon-sun { color: var(--muted-foreground); opacity: 0.3; }
+  .dark .theme-toggle .icon-moon { color: var(--foreground); opacity: 1; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -617,14 +621,16 @@
         </div>
         <span class="sr-only" id="weatherSr"></span>
       </aside>
-      <button class="theme-toggle" onclick="toggleTheme()" aria-label="테마 전환">
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-      </button>
     </div>
   </header>
 
-  <div class="day-selector" id="daySelector" role="tablist" aria-label="요일 선택"></div>
+  <div class="day-row">
+    <div class="day-selector" id="daySelector" role="tablist" aria-label="요일 선택"></div>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="테마 전환">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    </button>
+  </div>
 
   <main class="schedule-area" id="scheduleArea" aria-live="polite"></main>
   </div>
