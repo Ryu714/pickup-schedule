@@ -34,31 +34,12 @@ jobs:
             ULTRA_BASE_TIME="${PREV_H}30"
           fi
 
-          # 단기예보: base_time은 0200, 0500, 0800, 1100, 1400, 1700, 2000, 2300
-          # 가장 최근 발표 시간 찾기
           HOUR_NUM=$((10#$KST_H))
-          VILAG_TIMES="23 20 17 14 11 08 05 02"
-          VILAG_BASE_TIME=""
-          VILAG_BASE_DATE="$KST"
-          for t in $VILAG_TIMES; do
-            t_num=$((10#$t))
-            # 발표 후 약 10분 뒤 API 제공, +10분 여유
-            if [ $HOUR_NUM -ge $t_num ]; then
-              VILAG_BASE_TIME="${t}00"
-              break
-            fi
-          done
-          # 못 찾으면 전날 2300
-          if [ -z "$VILAG_BASE_TIME" ]; then
-            VILAG_BASE_DATE=$(TZ=Asia/Seoul date -d '1 day ago' +"%Y%m%d")
-            VILAG_BASE_TIME="2300"
-          fi
 
           NX=61
           NY=123
 
           echo "Ultra base: ${KST} ${ULTRA_BASE_TIME}"
-          echo "Vilag base: ${VILAG_BASE_DATE} ${VILAG_BASE_TIME}"
 
           # 초단기예보 호출 (현재 기온, 하늘상태, 강수형태)
           echo "Fetching ultra short-term forecast..."
@@ -71,15 +52,24 @@ jobs:
 
           echo "T1H=${T1H}, SKY=${SKY}, PTY=${PTY}"
 
-          # 단기예보 호출 (최저/최고 기온)
-          echo "Fetching village forecast..."
-          VILAG_RES=$(curl -s "https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=300&dataType=JSON&base_date=${VILAG_BASE_DATE}&base_time=${VILAG_BASE_TIME}&nx=${NX}&ny=${NY}&authKey=${KMA_API_KEY}")
+          # 단기예보 호출 (최저/최고 기온) - 0500 발표 기준 (TMN/TMX 포함 보장)
+          # 05시 이전이면 전날 2300 발표 사용
+          if [ $HOUR_NUM -ge 5 ]; then
+            MINMAX_DATE="$KST"
+            MINMAX_TIME="0500"
+          else
+            MINMAX_DATE=$(TZ=Asia/Seoul date -d '1 day ago' +"%Y%m%d")
+            MINMAX_TIME="2300"
+          fi
+          echo "MinMax base: ${MINMAX_DATE} ${MINMAX_TIME}"
+          echo "Fetching village forecast for TMN/TMX..."
+          VILAG_RES=$(curl -s "https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=800&dataType=JSON&base_date=${MINMAX_DATE}&base_time=${MINMAX_TIME}&nx=${NX}&ny=${NY}&authKey=${KMA_API_KEY}")
           echo "Vilag response: $(echo "$VILAG_RES" | head -c 500)"
 
-          TMN=$(echo "$VILAG_RES" | jq -r '.response.body.items.item[] | select(.category=="TMN") | .fcstValue' | head -1)
-          TMX=$(echo "$VILAG_RES" | jq -r '.response.body.items.item[] | select(.category=="TMX") | .fcstValue' | head -1)
+          # 오늘 날짜의 TMN/TMX만 추출
+          TMN=$(echo "$VILAG_RES" | jq -r --arg today "$KST" '.response.body.items.item[] | select(.category=="TMN" and .fcstDate==$today) | .fcstValue' | head -1)
+          TMX=$(echo "$VILAG_RES" | jq -r --arg today "$KST" '.response.body.items.item[] | select(.category=="TMX" and .fcstDate==$today) | .fcstValue' | head -1)
 
-          # TMN/TMX가 없을 수 있음 (발표 시간에 따라)
           # 없으면 이전 weather.json 값 유지
           if [ -z "$TMN" ] || [ "$TMN" = "null" ]; then
             if [ -f weather.json ]; then
