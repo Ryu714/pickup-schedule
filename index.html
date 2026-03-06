@@ -1033,9 +1033,6 @@ renderDays();
 render();
 
 // ─── Weather Widget ───
-const WEATHER_LAT = 37.4095;
-const WEATHER_LON = 127.2553;
-
 const SVG_ICON = (d) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
 const WI = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
@@ -1048,35 +1045,21 @@ const WI = {
   snowflake: '<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>',
   thunder: '<path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/>',
 };
-const WMO_WEATHER = {
-  0: { icon: SVG_ICON(WI.sun), label: '맑음' },
-  1: { icon: SVG_ICON(WI.cloudSun), label: '대체로 맑음' },
-  2: { icon: SVG_ICON(WI.cloudSun), label: '구름 조금' },
-  3: { icon: SVG_ICON(WI.cloud), label: '흐림' },
-  45: { icon: SVG_ICON(WI.fog), label: '안개' },
-  48: { icon: SVG_ICON(WI.fog), label: '안개' },
-  51: { icon: SVG_ICON(WI.drizzle), label: '이슬비' },
-  53: { icon: SVG_ICON(WI.rain), label: '비' },
-  55: { icon: SVG_ICON(WI.rain), label: '비' },
-  61: { icon: SVG_ICON(WI.rain), label: '비' },
-  63: { icon: SVG_ICON(WI.rain), label: '비' },
-  65: { icon: SVG_ICON(WI.rain), label: '폭우' },
-  71: { icon: SVG_ICON(WI.snow), label: '눈' },
-  73: { icon: SVG_ICON(WI.snow), label: '눈' },
-  75: { icon: SVG_ICON(WI.snowflake), label: '폭설' },
-  77: { icon: SVG_ICON(WI.snowflake), label: '폭설' },
-  80: { icon: SVG_ICON(WI.drizzle), label: '소나기' },
-  81: { icon: SVG_ICON(WI.rain), label: '소나기' },
-  82: { icon: SVG_ICON(WI.thunder), label: '폭우' },
-  85: { icon: SVG_ICON(WI.snow), label: '눈' },
-  86: { icon: SVG_ICON(WI.snowflake), label: '폭설' },
-  95: { icon: SVG_ICON(WI.thunder), label: '뇌우' },
-  96: { icon: SVG_ICON(WI.thunder), label: '뇌우' },
-  99: { icon: SVG_ICON(WI.thunder), label: '뇌우' },
-};
+function getWeatherInfo(sky, pty) {
+  // 강수형태 우선
+  if (pty == 1) return { icon: SVG_ICON(WI.rain), label: '비' };
+  if (pty == 2) return { icon: SVG_ICON(WI.snow), label: '비/눈' };
+  if (pty == 3) return { icon: SVG_ICON(WI.snow), label: '눈' };
+  if (pty == 4) return { icon: SVG_ICON(WI.drizzle), label: '소나기' };
+  // 하늘상태
+  if (sky == 1) return { icon: SVG_ICON(WI.sun), label: '맑음' };
+  if (sky == 3) return { icon: SVG_ICON(WI.cloudSun), label: '구름많음' };
+  if (sky == 4) return { icon: SVG_ICON(WI.cloud), label: '흐림' };
+  return { icon: SVG_ICON(WI.cloud), label: '날씨' };
+}
 
 function renderWeather(data) {
-  const info = WMO_WEATHER[data.code] || { icon: '☁️', label: '날씨' };
+  const info = getWeatherInfo(data.sky, data.pty);
   document.getElementById('weatherIcon').innerHTML = info.icon;
   document.getElementById('weatherTemp').textContent = data.temp + '°';
   document.getElementById('weatherLow').textContent = data.min + '°';
@@ -1099,18 +1082,9 @@ async function loadWeather() {
   try {
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=Asia%2FSeoul`,
-      { signal: controller.signal }
-    );
+    const res = await fetch('./weather.json', { signal: controller.signal });
     clearTimeout(tid);
-    const json = await res.json();
-    const data = {
-      temp: Math.round(json.current.temperature_2m),
-      code: json.current.weather_code,
-      min: Math.round(json.daily.temperature_2m_min[0]),
-      max: Math.round(json.daily.temperature_2m_max[0])
-    };
+    const data = await res.json();
     localStorage.setItem('weather_cache', JSON.stringify({ data, ts: Date.now() }));
     renderWeather(data);
   } catch (e) {

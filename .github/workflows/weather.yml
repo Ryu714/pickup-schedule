@@ -1,0 +1,133 @@
+name: Update Weather Data
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-weather:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch KMA weather data
+        env:
+          KMA_API_KEY: ${{ secrets.KMA_API_KEY }}
+        run: |
+          set -e
+
+          # 한국 시간 계산
+          KST=$(TZ=Asia/Seoul date +"%Y%m%d")
+          KST_H=$(TZ=Asia/Seoul date +"%H")
+          KST_M=$(TZ=Asia/Seoul date +"%M")
+
+          # 초단기예보: 매시 45분 이후 발표, base_time = 현재시 30분
+          # 45분 이전이면 이전 시간 사용
+          if [ "$KST_M" -ge 45 ]; then
+            ULTRA_BASE_TIME="${KST_H}30"
+          else
+            PREV_H=$(TZ=Asia/Seoul date -d '1 hour ago' +"%H")
+            ULTRA_BASE_TIME="${PREV_H}30"
+          fi
+
+          # 단기예보: base_time은 0200, 0500, 0800, 1100, 1400, 1700, 2000, 2300
+          # 가장 최근 발표 시간 찾기
+          HOUR_NUM=$((10#$KST_H))
+          VILAG_TIMES="23 20 17 14 11 08 05 02"
+          VILAG_BASE_TIME=""
+          VILAG_BASE_DATE="$KST"
+          for t in $VILAG_TIMES; do
+            t_num=$((10#$t))
+            # 발표 후 약 10분 뒤 API 제공, +10분 여유
+            if [ $HOUR_NUM -ge $t_num ]; then
+              VILAG_BASE_TIME="${t}00"
+              break
+            fi
+          done
+          # 못 찾으면 전날 2300
+          if [ -z "$VILAG_BASE_TIME" ]; then
+            VILAG_BASE_DATE=$(TZ=Asia/Seoul date -d '1 day ago' +"%Y%m%d")
+            VILAG_BASE_TIME="2300"
+          fi
+
+          NX=61
+          NY=123
+
+          echo "Ultra base: ${KST} ${ULTRA_BASE_TIME}"
+          echo "Vilag base: ${VILAG_BASE_DATE} ${VILAG_BASE_TIME}"
+
+          # 초단기예보 호출 (현재 기온, 하늘상태, 강수형태)
+          ULTRA_URL="http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${KMA_API_KEY}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${KST}&base_time=${ULTRA_BASE_TIME}&nx=${NX}&ny=${NY}"
+          echo "Fetching ultra short-term forecast..."
+          ULTRA_RES=$(curl -s --fail "$ULTRA_URL")
+
+          T1H=$(echo "$ULTRA_RES" | jq -r '.response.body.items.item[] | select(.category=="T1H") | .fcstValue' | head -1)
+          SKY=$(echo "$ULTRA_RES" | jq -r '.response.body.items.item[] | select(.category=="SKY") | .fcstValue' | head -1)
+          PTY=$(echo "$ULTRA_RES" | jq -r '.response.body.items.item[] | select(.category=="PTY") | .fcstValue' | head -1)
+
+          echo "T1H=${T1H}, SKY=${SKY}, PTY=${PTY}"
+
+          # 단기예보 호출 (최저/최고 기온)
+          VILAG_URL="http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${KMA_API_KEY}&pageNo=1&numOfRows=300&dataType=JSON&base_date=${VILAG_BASE_DATE}&base_time=${VILAG_BASE_TIME}&nx=${NX}&ny=${NY}"
+          echo "Fetching village forecast..."
+          VILAG_RES=$(curl -s --fail "$VILAG_URL")
+
+          TMN=$(echo "$VILAG_RES" | jq -r '.response.body.items.item[] | select(.category=="TMN") | .fcstValue' | head -1)
+          TMX=$(echo "$VILAG_RES" | jq -r '.response.body.items.item[] | select(.category=="TMX") | .fcstValue' | head -1)
+
+          # TMN/TMX가 없을 수 있음 (발표 시간에 따라)
+          # 없으면 이전 weather.json 값 유지
+          if [ -z "$TMN" ] || [ "$TMN" = "null" ]; then
+            if [ -f weather.json ]; then
+              TMN=$(jq -r '.min // empty' weather.json)
+            fi
+          fi
+          if [ -z "$TMX" ] || [ "$TMX" = "null" ]; then
+            if [ -f weather.json ]; then
+              TMX=$(jq -r '.max // empty' weather.json)
+            fi
+          fi
+
+          echo "TMN=${TMN}, TMX=${TMX}"
+
+          # T1H 유효성 검사
+          if [ -z "$T1H" ] || [ "$T1H" = "null" ]; then
+            echo "Failed to get temperature, skipping update"
+            exit 0
+          fi
+
+          # 소수점 제거 (정수로 반올림)
+          TEMP=$(printf "%.0f" "$T1H")
+          MIN=$(printf "%.0f" "${TMN:-0}")
+          MAX=$(printf "%.0f" "${TMX:-0}")
+          UPDATED=$(TZ=Asia/Seoul date +"%Y-%m-%dT%H:%M:%S+09:00")
+
+          # weather.json 생성
+          cat > weather.json << EOF
+          {
+            "temp": ${TEMP},
+            "min": ${MIN},
+            "max": ${MAX},
+            "sky": ${SKY:-1},
+            "pty": ${PTY:-0},
+            "updatedAt": "${UPDATED}"
+          }
+          EOF
+
+          # JSON 정리 (들여쓰기 제거)
+          jq -c '.' weather.json > weather.tmp && mv weather.tmp weather.json
+          echo "weather.json:"
+          cat weather.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add weather.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: update weather data [skip ci]"
+          git push
