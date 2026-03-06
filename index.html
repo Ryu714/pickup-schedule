@@ -504,10 +504,6 @@
   .empty-state svg { margin-bottom: 10px; color: var(--border); }
   .empty-state p { font-size: var(--text-sm); font-weight: 500; }
 
-  /* Fade transition */
-  #scheduleArea {
-    transition: opacity 150ms var(--transition);
-  }
 
   /* Accessibility */
   .sr-only {
@@ -691,12 +687,7 @@ function selectDay(day) {
   document.querySelectorAll('.day-btn').forEach((btn, i) => {
     btn.classList.toggle('active', DAYS[i] === day);
   });
-  const area = document.getElementById('scheduleArea');
-  area.style.opacity = '0';
-  area.addEventListener('transitionend', () => {
-    renderBoth();
-    requestAnimationFrame(() => { area.style.opacity = ''; });
-  }, { once: true });
+  render();
 }
 
 function renderDays() {
