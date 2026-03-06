@@ -505,20 +505,8 @@
   .empty-state p { font-size: var(--text-sm); font-weight: 500; }
 
   /* Fade transition */
-  .fade-enter {
-    animation: fadeIn 200ms var(--transition);
-  }
-  .fade-exit {
-    animation: fadeOut 150ms var(--transition) forwards;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+  #scheduleArea {
+    transition: opacity 150ms var(--transition);
   }
 
   /* Accessibility */
@@ -704,10 +692,10 @@ function selectDay(day) {
     btn.classList.toggle('active', DAYS[i] === day);
   });
   const area = document.getElementById('scheduleArea');
-  area.classList.add('fade-exit');
-  area.addEventListener('animationend', () => {
-    area.classList.remove('fade-exit');
-    render();
+  area.style.opacity = '0';
+  area.addEventListener('transitionend', () => {
+    renderBoth();
+    requestAnimationFrame(() => { area.style.opacity = ''; });
   }, { once: true });
 }
 
@@ -731,11 +719,6 @@ function buildSideCard(ev) {
 }
 
 function render() {
-  const area = document.getElementById('scheduleArea');
-  area.classList.remove('fade-enter');
-  void area.offsetWidth; // force reflow
-  area.classList.add('fade-enter');
-
   renderBoth();
 }
 
