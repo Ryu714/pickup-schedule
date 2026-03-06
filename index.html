@@ -1047,9 +1047,9 @@ const WI = {
 };
 function getWeatherInfo(sky, pty) {
   // 강수형태 우선
-  if (pty == 1) return { icon: SVG_ICON(WI.rain), label: '비' };
-  if (pty == 2) return { icon: SVG_ICON(WI.snow), label: '비/눈' };
-  if (pty == 3) return { icon: SVG_ICON(WI.snow), label: '눈' };
+  if (pty == 1 || pty == 5) return { icon: SVG_ICON(WI.rain), label: pty == 5 ? '빗방울' : '비' };
+  if (pty == 2 || pty == 6) return { icon: SVG_ICON(WI.snow), label: pty == 6 ? '빗방울눈날림' : '비/눈' };
+  if (pty == 3 || pty == 7) return { icon: SVG_ICON(WI.snow), label: pty == 7 ? '눈날림' : '눈' };
   if (pty == 4) return { icon: SVG_ICON(WI.drizzle), label: '소나기' };
   // 하늘상태
   if (sky == 1) return { icon: SVG_ICON(WI.sun), label: '맑음' };
