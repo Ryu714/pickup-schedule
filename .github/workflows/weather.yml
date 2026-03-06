@@ -36,8 +36,8 @@ jobs:
 
           HOUR_NUM=$((10#$KST_H))
 
-          NX=61
-          NY=123
+          NX=64
+          NY=119
 
           echo "Ultra base: ${KST} ${ULTRA_BASE_TIME}"
 
