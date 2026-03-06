@@ -822,7 +822,6 @@ function renderNowIndicator(scrollToCenter) {
   if (sbs) {
     const existing = sbs.querySelector('.now-indicator');
     if (existing) existing.remove();
-    sbs.querySelectorAll('.is-past').forEach(el => el.classList.remove('is-past'));
   }
 
   if (!isToday()) return;
@@ -882,14 +881,13 @@ function renderNowIndicator(scrollToCenter) {
   `;
   sbs.appendChild(indicator);
 
-  // 지난 카드에 is-past 클래스 적용
+  // is-past 제거 + 추가를 한 번에 처리 (깜빡임 방지)
   for (let i = 0; i < rowTimes.length; i++) {
-    if (rowTimes[i] < nowMin) {
-      const lCard = leftCells[i] && leftCells[i].querySelector('.side-card');
-      const rCard = rightCells[i] && rightCells[i].querySelector('.side-card');
-      if (lCard) lCard.classList.add('is-past');
-      if (rCard) rCard.classList.add('is-past');
-    }
+    const lCard = leftCells[i] && leftCells[i].querySelector('.side-card');
+    const rCard = rightCells[i] && rightCells[i].querySelector('.side-card');
+    const isPast = rowTimes[i] < nowMin;
+    if (lCard) lCard.classList.toggle('is-past', isPast);
+    if (rCard) rCard.classList.toggle('is-past', isPast);
   }
 
   if (scrollToCenter) {
