@@ -405,13 +405,13 @@
     padding: 6px 8px 6px 0;
   }
   .side-col-left::after {
-    left: calc(50% - 5.5px);
+    left: calc(50% - 4px);
   }
   .side-col-right {
     padding: 6px 0 6px 8px;
   }
   .side-col-right::after {
-    left: calc(50% + 2.5px);
+    left: calc(50% + 4px);
   }
 
   .side-divider {
@@ -583,7 +583,9 @@
     .side-card .event-name { font-size: 0.78rem; }
     .side-card .event-badge { font-size: 0.625rem; padding: 1px 5px; }
     .side-col-left { padding-right: 6px; padding-left: 6px; }
+    .side-col-left::after { left: calc(50% - 1.5px); }
     .side-col-right { padding-left: 6px; padding-right: 6px; }
+    .side-col-right::after { left: calc(50% - 1.5px); }
     .weather-widget { padding: 3px 8px; }
     .weather-temp { font-size: var(--text-lg); }
     .weather-icon svg { width: 18px; height: 18px; }
