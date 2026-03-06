@@ -62,7 +62,7 @@ jobs:
 
           # 초단기예보 호출 (현재 기온, 하늘상태, 강수형태)
           echo "Fetching ultra short-term forecast..."
-          ULTRA_RES=$(curl -s "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${KMA_API_KEY}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${KST}&base_time=${ULTRA_BASE_TIME}&nx=${NX}&ny=${NY}")
+          ULTRA_RES=$(curl -s "https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getUltraSrtFcst?pageNo=1&numOfRows=60&dataType=JSON&base_date=${KST}&base_time=${ULTRA_BASE_TIME}&nx=${NX}&ny=${NY}&authKey=${KMA_API_KEY}")
           echo "Ultra response: $(echo "$ULTRA_RES" | head -c 500)"
 
           T1H=$(echo "$ULTRA_RES" | jq -r '.response.body.items.item[] | select(.category=="T1H") | .fcstValue' | head -1)
@@ -73,7 +73,7 @@ jobs:
 
           # 단기예보 호출 (최저/최고 기온)
           echo "Fetching village forecast..."
-          VILAG_RES=$(curl -s "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${KMA_API_KEY}&pageNo=1&numOfRows=300&dataType=JSON&base_date=${VILAG_BASE_DATE}&base_time=${VILAG_BASE_TIME}&nx=${NX}&ny=${NY}")
+          VILAG_RES=$(curl -s "https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=300&dataType=JSON&base_date=${VILAG_BASE_DATE}&base_time=${VILAG_BASE_TIME}&nx=${NX}&ny=${NY}&authKey=${KMA_API_KEY}")
           echo "Vilag response: $(echo "$VILAG_RES" | head -c 500)"
 
           TMN=$(echo "$VILAG_RES" | jq -r '.response.body.items.item[] | select(.category=="TMN") | .fcstValue' | head -1)
