@@ -52,23 +52,30 @@ jobs:
 
           echo "T1H=${T1H}, SKY=${SKY}, PTY=${PTY}"
 
-          # 단기예보 호출 (최저/최고 기온) - 0500 발표 기준 (TMN/TMX 포함 보장)
-          # 05시 이전이면 전날 2300 발표 사용
-          if [ $HOUR_NUM -ge 5 ]; then
-            MINMAX_DATE="$KST"
-            MINMAX_TIME="0500"
-          else
-            MINMAX_DATE=$(TZ=Asia/Seoul date -d '1 day ago' +"%Y%m%d")
-            MINMAX_TIME="2300"
-          fi
-          echo "MinMax base: ${MINMAX_DATE} ${MINMAX_TIME}"
-          echo "Fetching village forecast for TMN/TMX..."
-          VILAG_RES=$(curl -s "https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=800&dataType=JSON&base_date=${MINMAX_DATE}&base_time=${MINMAX_TIME}&nx=${NX}&ny=${NY}&authKey=${KMA_API_KEY}")
-          echo "Vilag response: $(echo "$VILAG_RES" | head -c 500)"
+          # 단기예보 호출 (최저/최고 기온)
+          # 최신 발표 시간부터 역순으로 조회하여 오늘의 TMN/TMX 찾기
+          TMN=""
+          TMX=""
+          VILAG_BASE_TIMES="23 20 17 14 11 08 05 02"
+          for vt in $VILAG_BASE_TIMES; do
+            vt_num=$((10#$vt))
+            if [ $HOUR_NUM -ge $vt_num ]; then
+              echo "Trying vilag base_time: ${vt}00..."
+              VILAG_RES=$(curl -s "https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=800&dataType=JSON&base_date=${KST}&base_time=${vt}00&nx=${NX}&ny=${NY}&authKey=${KMA_API_KEY}")
 
-          # 오늘 날짜의 TMN/TMX만 추출
-          TMN=$(echo "$VILAG_RES" | jq -r --arg today "$KST" '.response.body.items.item[] | select(.category=="TMN" and .fcstDate==$today) | .fcstValue' | head -1)
-          TMX=$(echo "$VILAG_RES" | jq -r --arg today "$KST" '.response.body.items.item[] | select(.category=="TMX" and .fcstDate==$today) | .fcstValue' | head -1)
+              if [ -z "$TMN" ] || [ "$TMN" = "null" ]; then
+                TMN=$(echo "$VILAG_RES" | jq -r --arg today "$KST" '.response.body.items.item[] | select(.category=="TMN" and .fcstDate==$today) | .fcstValue' | head -1)
+              fi
+              if [ -z "$TMX" ] || [ "$TMX" = "null" ]; then
+                TMX=$(echo "$VILAG_RES" | jq -r --arg today "$KST" '.response.body.items.item[] | select(.category=="TMX" and .fcstDate==$today) | .fcstValue' | head -1)
+              fi
+
+              # 둘 다 찾으면 중단
+              if [ -n "$TMN" ] && [ "$TMN" != "null" ] && [ -n "$TMX" ] && [ "$TMX" != "null" ]; then
+                break
+              fi
+            fi
+          done
 
           # 없으면 이전 weather.json 값 유지
           if [ -z "$TMN" ] || [ "$TMN" = "null" ]; then
