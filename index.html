@@ -405,13 +405,13 @@
     padding: 6px 8px 6px 0;
   }
   .side-col-left::after {
-    left: calc(50% - 4px);
+    left: calc(50% - 5.5px);
   }
   .side-col-right {
     padding: 6px 0 6px 8px;
   }
   .side-col-right::after {
-    left: calc(50% + 4px);
+    left: calc(50% + 2.5px);
   }
 
   .side-divider {
@@ -761,7 +761,7 @@ function renderDays() {
 function buildSideCard(ev, typeColorMap) {
   const badgeDot = ev.dir === 'arrive' ? '●' : '○';
   const badgeClass = ev.dir === 'arrive' ? 'badge-arrive' : 'badge-leave';
-  const borderColor = (typeColorMap[ev.type] || 0) % 2 === 0 ? 'var(--foreground)' : 'var(--muted-foreground)';
+  const borderColor = (typeColorMap[ev.type] || 0) % 2 === 0 ? 'var(--foreground)' : '#8a8a8a';
   return `<div class="side-card" style="border-left-color:${borderColor}">
     <div class="event-card-header">
       <span class="event-time">${formatTime(ev.time)}</span>
