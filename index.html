@@ -373,9 +373,28 @@
   .side-by-side {
     display: grid;
     grid-template-columns: 1fr var(--space-2) 1fr;
-    gap: 0;
+    row-gap: 12px;
     min-height: 120px;
     position: relative;
+  }
+
+  /* 타임라인 세로선: side-by-side 컨테이너에 배치 */
+  .side-by-side::before,
+  .side-by-side::after {
+    content: '';
+    position: absolute;
+    top: 40px;
+    bottom: 12px;
+    width: 3px;
+    background: var(--border);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .side-by-side::before {
+    left: calc(25% - 2px);
+  }
+  .side-by-side::after {
+    left: calc(75% + 2px);
   }
 
   .side-col-name {
@@ -391,34 +410,17 @@
     min-width: 72px;
   }
 
-  .side-col {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  .side-cell, .side-cell-empty {
     position: relative;
+    z-index: 1;
   }
-
-  .side-col::after {
-    content: '';
-    position: absolute;
-    top: 40px;
-    bottom: 12px;
-    width: 3px;
-    background: var(--border);
-    z-index: 0;
+  .side-cell-left, .side-cell-empty-left {
+    grid-column: 1;
+    padding: 0 8px 0 0;
   }
-
-  .side-col-left {
-    padding: 6px 8px 6px 0;
-  }
-  .side-col-left::after {
-    left: calc(50% - 4px);
-  }
-  .side-col-right {
-    padding: 6px 0 6px 8px;
-  }
-  .side-col-right::after {
-    left: calc(50% + 4px);
+  .side-cell-right, .side-cell-empty-right {
+    grid-column: 3;
+    padding: 0 0 0 8px;
   }
 
   .side-divider {
@@ -463,10 +465,6 @@
   .side-card.is-past > * {
     opacity: 0.25;
     transition: opacity 300ms ease;
-  }
-
-  .side-row {
-    display: contents;
   }
 
   .side-card {
@@ -586,10 +584,10 @@
     .side-card .event-time { font-size: var(--text-base); }
     .side-card .event-name { font-size: 0.78rem; }
     .side-card .event-badge { font-size: 0.625rem; padding: 1px 5px; }
-    .side-col-left { padding-right: 6px; padding-left: 6px; }
-    .side-col-left::after { left: calc(50% - 1.5px); }
-    .side-col-right { padding-left: 6px; padding-right: 6px; }
-    .side-col-right::after { left: calc(50% - 1.5px); }
+    .side-cell-left, .side-cell-empty-left { padding-right: 6px; padding-left: 6px; }
+    .side-cell-right, .side-cell-empty-right { padding-left: 6px; padding-right: 6px; }
+    .side-by-side::before { left: calc(25% - 1.5px); }
+    .side-by-side::after { left: calc(75% - 1.5px); }
     .weather-widget { padding: 3px 8px; }
     .weather-temp { font-size: var(--text-lg); }
     .weather-icon svg { width: 18px; height: 18px; }
@@ -841,50 +839,32 @@ function renderBoth() {
 
   let html = `<div class="side-by-side">`;
 
-  // Build left column, divider, right column
-  let leftHtml = '<div class="side-col side-col-left"><div class="side-col-name"><span class="summary-badge summary-badge-yoonwoo">최윤우</span></div>';
-  let rightHtml = '<div class="side-col side-col-right"><div class="side-col-name"><span class="summary-badge summary-badge-jun">류 준</span></div>';
+  // Header row
+  html += '<div class="side-col-name" style="grid-column:1"><span class="summary-badge summary-badge-yoonwoo">최윤우</span></div>';
+  html += '<div style="grid-column:2"></div>';
+  html += '<div class="side-col-name" style="grid-column:3"><span class="summary-badge summary-badge-jun">류 준</span></div>';
 
-  rows.forEach((row, idx) => {
-    const delay = `style="animation-delay:${idx * 40}ms"`;
+  // Row-based layout: 좌/우 셀을 같은 grid row에 배치
+  rows.forEach((row) => {
     if (row.left) {
-      leftHtml += `<div class="side-cell" ${delay}>${buildSideCard(row.left, leftColorMap)}</div>`;
+      html += `<div class="side-cell side-cell-left">${buildSideCard(row.left, leftColorMap)}</div>`;
     } else {
-      leftHtml += `<div class="side-cell-empty" ${delay}><div style="height:${estimateCardHeight(row.right)}px"></div></div>`;
+      html += `<div class="side-cell-empty side-cell-empty-left"></div>`;
     }
+    html += `<div style="grid-column:2"></div>`;
     if (row.right) {
-      rightHtml += `<div class="side-cell" ${delay}>${buildSideCard(row.right, rightColorMap)}</div>`;
+      html += `<div class="side-cell side-cell-right">${buildSideCard(row.right, rightColorMap)}</div>`;
     } else {
-      rightHtml += `<div class="side-cell-empty" ${delay}><div style="height:${estimateCardHeight(row.left)}px"></div></div>`;
+      html += `<div class="side-cell-empty side-cell-empty-right"></div>`;
     }
   });
 
-  leftHtml += '</div>';
-  rightHtml += '</div>';
+  html += '</div>';
 
   _sideRows = rows;
-
-  html += leftHtml + '<div class="side-divider"></div>' + rightHtml + '</div>';
   area.innerHTML = html;
 
-  // 좌우 셀 높이 동기화: 추정값 오차로 인한 수직 위치 어긋남 방지
-  const sbsEl = area.querySelector('.side-by-side');
-  if (sbsEl) {
-    const lCells = sbsEl.querySelector('.side-col-left').querySelectorAll('.side-cell, .side-cell-empty');
-    const rCells = sbsEl.querySelector('.side-col-right').querySelectorAll('.side-cell, .side-cell-empty');
-    for (let i = 0; i < lCells.length; i++) {
-      const maxH = Math.max(lCells[i].offsetHeight, rCells[i].offsetHeight);
-      lCells[i].style.minHeight = maxH + 'px';
-      rCells[i].style.minHeight = maxH + 'px';
-    }
-  }
-
   requestAnimationFrame(() => renderNowIndicator(true));
-}
-
-function estimateCardHeight(ev) {
-  if (!ev) return 60;
-  return ev.detail ? 76 : 64;
 }
 
 function renderNowIndicator(scrollToCenter) {
@@ -907,11 +887,8 @@ function renderNowIndicator(scrollToCenter) {
   // 이벤트 범위 ±60분 벗어나면 비표시
   if (nowMin < firstTime - 60 || nowMin > lastTime + 60) return;
 
-  const leftCol = sbs.querySelector('.side-col-left');
-  const rightCol = sbs.querySelector('.side-col-right');
-  if (!leftCol || !rightCol) return;
-  const leftCells = leftCol.querySelectorAll('.side-cell, .side-cell-empty');
-  const rightCells = rightCol.querySelectorAll('.side-cell, .side-cell-empty');
+  const leftCells = sbs.querySelectorAll('.side-cell-left, .side-cell-empty-left');
+  const rightCells = sbs.querySelectorAll('.side-cell-right, .side-cell-empty-right');
   if (leftCells.length === 0) return;
 
   const sbsRect = sbs.getBoundingClientRect();
@@ -990,12 +967,8 @@ function applyGlowToNextCards() {
   const sbs = document.querySelector('.side-by-side');
   if (!sbs) return;
 
-  const leftCol = sbs.querySelector('.side-col-left');
-  const rightCol = sbs.querySelector('.side-col-right');
-  if (!leftCol || !rightCol) return;
-
-  const leftCells = leftCol.querySelectorAll('.side-cell, .side-cell-empty');
-  const rightCells = rightCol.querySelectorAll('.side-cell, .side-cell-empty');
+  const leftCells = sbs.querySelectorAll('.side-cell-left, .side-cell-empty-left');
+  const rightCells = sbs.querySelectorAll('.side-cell-right, .side-cell-empty-right');
 
   const glowCards = [];
   if (leftCells[nextRowIdx]) {
