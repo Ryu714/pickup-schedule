@@ -864,7 +864,9 @@ function renderBoth() {
   _sideRows = rows;
   area.innerHTML = html;
 
-  requestAnimationFrame(() => renderNowIndicator(true));
+  document.fonts.ready.then(() => {
+    requestAnimationFrame(() => renderNowIndicator(true));
+  });
 }
 
 function renderNowIndicator(scrollToCenter) {
