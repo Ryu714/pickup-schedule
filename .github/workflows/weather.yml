@@ -101,6 +101,15 @@ jobs:
           TEMP=$(printf "%.0f" "$T1H")
           MIN=$(printf "%.0f" "${TMN:-0}")
           MAX=$(printf "%.0f" "${TMX:-0}")
+
+          # 현재 기온이 최저/최고 범위를 벗어나면 보정
+          if [ "$TEMP" -lt "$MIN" ]; then
+            MIN=$TEMP
+          fi
+          if [ "$TEMP" -gt "$MAX" ]; then
+            MAX=$TEMP
+          fi
+
           UPDATED=$(TZ=Asia/Seoul date +"%Y-%m-%dT%H:%M:%S+09:00")
 
           # weather.json 생성
