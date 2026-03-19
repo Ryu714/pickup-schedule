@@ -56,6 +56,12 @@
     /* Transition */
     --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 
+    /* Air Quality */
+    --aq-good:      #38bdf8;
+    --aq-moderate:  #22c55e;
+    --aq-bad:       #f97316;
+    --aq-very-bad:  #ef4444;
+
   }
 
   .dark {
@@ -200,6 +206,38 @@
 
   .weather-low { color: #3b82f6; }
   .weather-high { color: #ef4444; }
+
+  /* Dust Widget — .weather-range와 동일 구조 */
+  .dust-widget {
+    margin-left: 1px;
+    display: flex;
+    align-items: center;
+  }
+  .dust-range {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+  }
+  .dust-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .dust-lbl { color: var(--muted-foreground); font-weight: 400; }
+  .dust-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 420px) {
+    .dust-range { font-size: 0.6875rem; }
+  }
+  @media (max-width: 360px) { .dust-widget { display: none; } }
 
   /* Day selector */
   .day-row {
@@ -619,6 +657,19 @@
         </div>
         <span class="sr-only" id="weatherSr"></span>
       </aside>
+      <div class="dust-widget" id="dustWidget" role="status" aria-live="polite" hidden>
+        <div class="dust-range">
+          <span class="dust-row">
+            <span class="dust-lbl">미세</span>
+            <span class="dust-dot" id="dustDot10" aria-hidden="true"></span>
+          </span>
+          <span class="dust-row">
+            <span class="dust-lbl">초미세</span>
+            <span class="dust-dot" id="dustDot25" aria-hidden="true"></span>
+          </span>
+        </div>
+        <span class="sr-only" id="dustSr"></span>
+      </div>
     </div>
   </header>
 
@@ -1020,6 +1071,45 @@ const WI = {
   snowflake: '<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>',
   thunder: '<path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/>',
 };
+function getDustGrade(pm, type) {
+  if (pm == null || isNaN(pm)) return null;
+  const thresholds = type === 'pm10' ? [30, 80, 150] : [15, 35, 75];
+  const grades = [
+    { label: '좋음',     color: '#38bdf8' },
+    { label: '보통',     color: '#22c55e' },
+    { label: '나쁨',     color: '#f97316' },
+    { label: '매우나쁨', color: '#ef4444' },
+  ];
+  for (let i = 0; i < thresholds.length; i++) {
+    if (pm <= thresholds[i]) return grades[i];
+  }
+  return grades[3];
+}
+
+function renderDust(data) {
+  const widget = document.getElementById('dustWidget');
+  const g10 = getDustGrade(data.pm10, 'pm10');
+  const g25 = getDustGrade(data.pm25, 'pm25');
+
+  if (!g10 && !g25) { widget.hidden = true; return; }
+  widget.hidden = false;
+
+  function applyGrade(dotEl, info) {
+    const row = dotEl.closest('.dust-row');
+    if (!info) { row.hidden = true; return; }
+    row.hidden = false;
+    dotEl.style.background = info.color;
+  }
+
+  applyGrade(document.getElementById('dustDot10'), g10);
+  applyGrade(document.getElementById('dustDot25'), g25);
+
+  const parts = [];
+  if (g10) parts.push('미세먼지 ' + g10.label + (data.pm10 != null ? ' ' + data.pm10 + 'µg' : ''));
+  if (g25) parts.push('초미세먼지 ' + g25.label + (data.pm25 != null ? ' ' + data.pm25 + 'µg' : ''));
+  document.getElementById('dustSr').textContent = parts.join(', ');
+}
+
 function getWeatherInfo(sky, pty) {
   // 강수형태 우선
   if (pty == 1 || pty == 5) return { icon: SVG_ICON(WI.rain), label: pty == 5 ? '빗방울' : '비' };
@@ -1042,13 +1132,14 @@ function renderWeather(data) {
   document.getElementById('weatherSr').textContent =
     info.label + ', 현재 ' + data.temp + '도, 최저 ' + data.min + '도, 최고 ' + data.max + '도';
   document.getElementById('weatherWidget').classList.add('loaded');
+  renderDust(data);
 }
 
 async function loadWeather() {
   const cached = localStorage.getItem('weather_cache');
   if (cached) {
     const { data, ts } = JSON.parse(cached);
-    if (Date.now() - ts < 10 * 60 * 1000 && data.min !== undefined) {
+    if (Date.now() - ts < 10 * 60 * 1000 && data.min !== undefined && 'pm25' in data) {
       renderWeather(data);
       return;
     }

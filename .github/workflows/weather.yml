@@ -129,6 +129,31 @@ jobs:
           echo "weather.json:"
           cat weather.json
 
+      - name: Fetch air quality data
+        env:
+          AIR_API_KEY: ${{ secrets.AIR_API_KEY }}
+        run: |
+          STATION="경안동"
+          AQ=$(curl -sG --max-time 10 \
+            "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty" \
+            --data-urlencode "serviceKey=${AIR_API_KEY}" \
+            --data-urlencode "stationName=${STATION}" \
+            -d "dataTerm=DAILY&pageNo=1&numOfRows=1&returnType=json&ver=1.0")
+          echo "Air quality response: $(echo "$AQ" | head -c 500)"
+
+          PM10=$(echo "$AQ" | jq -r '.response.body.items[0].pm10Value // "null"')
+          PM25=$(echo "$AQ" | jq -r '.response.body.items[0].pm25Value // "null"')
+          [ "$PM10" = "-" ] && PM10="null"
+          [ "$PM25" = "-" ] && PM25="null"
+          echo "PM10=${PM10}, PM25=${PM25}"
+
+          # 기존 weather.json에 pm10, pm25 필드 병합
+          jq --argjson pm10 $PM10 --argjson pm25 $PM25 \
+            '. + {pm10: $pm10, pm25: $pm25}' weather.json | jq -c '.' > weather.tmp \
+            && mv weather.tmp weather.json
+          echo "weather.json after air quality merge:"
+          cat weather.json
+
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
