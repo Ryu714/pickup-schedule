@@ -18,7 +18,15 @@ jobs:
       - name: Fetch meal data
         run: |
           TODAY=$(TZ=Asia/Seoul date +"%Y%m%d")
-          TOMORROW=$(TZ=Asia/Seoul date -d '+1 day' +"%Y%m%d")
+          # 다음 등교일: 토(6)→+3일(월), 일(7)→+2일(월), 평일→+1일
+          TOMORROW_DOW=$(TZ=Asia/Seoul date -d '+1 day' +"%u")
+          if [ "$TOMORROW_DOW" -eq 6 ]; then
+            TOMORROW=$(TZ=Asia/Seoul date -d '+3 days' +"%Y%m%d")
+          elif [ "$TOMORROW_DOW" -eq 7 ]; then
+            TOMORROW=$(TZ=Asia/Seoul date -d '+2 days' +"%Y%m%d")
+          else
+            TOMORROW=$(TZ=Asia/Seoul date -d '+1 day' +"%Y%m%d")
+          fi
 
           fetch_menus() {
             local YMD=$1

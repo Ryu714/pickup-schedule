@@ -919,24 +919,22 @@ function renderBoth() {
 
   // 급식 카드 행 (now-indicator 범위 밖 — side-meal-* 클래스 사용)
   if (_mealData) {
-    // KST 기준 오늘/내일 날짜 문자열 (YYYYMMDD)
+    // KST 오늘 날짜 문자열 (YYYYMMDD)
     const _kstOffset = 9 * 60 * 60000;
     const _kstNow = new Date(Date.now() + _kstOffset + new Date().getTimezoneOffset() * 60000);
-    const _kstTomorrow = new Date(_kstNow.getTime() + 86400000);
     const _toYYYYMMDD = d => d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
     const _todayKST = _toYYYYMMDD(_kstNow);
-    const _tomorrowKST = _toYYYYMMDD(_kstTomorrow);
-    // meal.json의 date 필드로 매핑 (자정 이후에도 올바른 메뉴 표시)
+    // meal.json date 필드에서 직접 요일 계산 → 금요일→다음주 월요일도 처리
     const _mealByDate = {};
     if (_mealData.today.date)    _mealByDate[_mealData.today.date]    = _mealData.today;
     if (_mealData.tomorrow.date) _mealByDate[_mealData.tomorrow.date] = _mealData.tomorrow;
-    const _todayDow    = _kstNow.getDay();
-    const _tomorrowDow = _kstTomorrow.getDay();
-    const _todayDay    = _todayDow    >= 1 && _todayDow    <= 5 ? DAYS[_todayDow    - 1] : null;
-    const _tomorrowDay = _tomorrowDow >= 1 && _tomorrowDow <= 5 ? DAYS[_tomorrowDow - 1] : null;
     let _meal = null;
-    if (currentDay === _todayDay    && _mealByDate[_todayKST])    { _meal = _mealByDate[_todayKST]; }
-    else if (currentDay === _tomorrowDay && _mealByDate[_tomorrowKST]) { _meal = _mealByDate[_tomorrowKST]; }
+    for (const [ds, entry] of Object.entries(_mealByDate)) {
+      if (!ds || ds < _todayKST) continue;  // 과거 날짜 스킵
+      const dow = new Date(+ds.slice(0,4), +ds.slice(4,6)-1, +ds.slice(6,8)).getDay();
+      const dayLabel = dow >= 1 && dow <= 5 ? DAYS[dow - 1] : null;
+      if (currentDay === dayLabel) { _meal = entry; break; }
+    }
     if (_meal && _meal.menus) {
       html += `<div class="side-meal-left">
         <div class="side-card" style="border-left-color:#10b981;min-height:auto;">
