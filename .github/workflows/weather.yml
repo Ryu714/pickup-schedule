@@ -161,4 +161,4 @@ jobs:
           git add weather.json
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "chore: update weather data [skip ci]"
-          git push
+          git pull --rebase && git push
