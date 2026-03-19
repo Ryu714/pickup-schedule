@@ -247,6 +247,27 @@
     margin-bottom: var(--space-3);
   }
 
+  .meal-tag {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--muted);
+    color: var(--muted-foreground);
+  }
+  .side-meal-left {
+    grid-column: 1;
+    padding: 0 8px 0 0;
+    position: relative;
+    z-index: 1;
+  }
+  .side-meal-right {
+    grid-column: 3;
+    padding: 0 0 0 8px;
+    position: relative;
+    z-index: 1;
+  }
+
   .day-selector {
     display: flex;
     background: var(--muted);
@@ -773,6 +794,7 @@ const DATA = {
 
 let currentDay = '월';
 let _sideRows = [];
+let _mealData = null;
 const todayIdx = new Date().getDay();
 if (todayIdx >= 1 && todayIdx <= 5) currentDay = DAYS[todayIdx - 1];
 
@@ -894,6 +916,41 @@ function renderBoth() {
   html += '<div class="side-col-name" style="grid-column:1"><span class="summary-badge summary-badge-yoonwoo">최윤우</span></div>';
   html += '<div style="grid-column:2"></div>';
   html += '<div class="side-col-name" style="grid-column:3"><span class="summary-badge summary-badge-jun">류 준</span></div>';
+
+  // 급식 카드 행 (now-indicator 범위 밖 — side-meal-* 클래스 사용)
+  if (_mealData) {
+    // KST 기준 오늘/내일 날짜 문자열 (YYYYMMDD)
+    const _kstOffset = 9 * 60 * 60000;
+    const _kstNow = new Date(Date.now() + _kstOffset + new Date().getTimezoneOffset() * 60000);
+    const _kstTomorrow = new Date(_kstNow.getTime() + 86400000);
+    const _toYYYYMMDD = d => d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+    const _todayKST = _toYYYYMMDD(_kstNow);
+    const _tomorrowKST = _toYYYYMMDD(_kstTomorrow);
+    // meal.json의 date 필드로 매핑 (자정 이후에도 올바른 메뉴 표시)
+    const _mealByDate = {};
+    if (_mealData.today.date)    _mealByDate[_mealData.today.date]    = _mealData.today;
+    if (_mealData.tomorrow.date) _mealByDate[_mealData.tomorrow.date] = _mealData.tomorrow;
+    const _todayDow    = _kstNow.getDay();
+    const _tomorrowDow = _kstTomorrow.getDay();
+    const _todayDay    = _todayDow    >= 1 && _todayDow    <= 5 ? DAYS[_todayDow    - 1] : null;
+    const _tomorrowDay = _tomorrowDow >= 1 && _tomorrowDow <= 5 ? DAYS[_tomorrowDow - 1] : null;
+    let _meal = null;
+    if (currentDay === _todayDay    && _mealByDate[_todayKST])    { _meal = _mealByDate[_todayKST]; }
+    else if (currentDay === _tomorrowDay && _mealByDate[_tomorrowKST]) { _meal = _mealByDate[_tomorrowKST]; }
+    if (_meal && _meal.menus) {
+      html += `<div class="side-meal-left">
+        <div class="side-card" style="border-left-color:#10b981;min-height:auto;">
+          <div class="event-card-header">
+            <span class="event-time" style="font-size:var(--text-sm);font-weight:600;">급식정보</span>
+            <span class="meal-tag">한아람초</span>
+          </div>
+          <div class="event-detail" style="word-break:keep-all;white-space:normal;">${_meal.menus.join(' · ')}</div>
+        </div>
+      </div>`;
+      html += `<div style="grid-column:2"></div>`;
+      html += `<div class="side-meal-right"></div>`;
+    }
+  }
 
   // Row-based layout: 좌/우 셀을 같은 grid row에 배치
   rows.forEach((row) => {
@@ -1160,6 +1217,23 @@ async function loadWeather() {
 
 loadWeather();
 setInterval(loadWeather, 10 * 60 * 1000);
+
+async function loadMeal() {
+  const cached = localStorage.getItem('meal_cache');
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch('./meal.json', { signal: controller.signal });
+    clearTimeout(tid);
+    const data = await res.json();
+    localStorage.setItem('meal_cache', JSON.stringify({ data }));
+    _mealData = data; render();
+  } catch (e) {
+    if (cached) { _mealData = JSON.parse(cached).data; render(); }
+  }
+}
+
+loadMeal();
   </script>
 </body>
 </html>
