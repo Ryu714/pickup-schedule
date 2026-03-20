@@ -920,17 +920,14 @@ function renderBoth() {
   // 급식 카드 행 (now-indicator 범위 밖 — side-meal-* 클래스 사용)
   if (_mealData) {
     // KST 오늘 날짜 문자열 (YYYYMMDD)
-    const _kstOffset = 9 * 60 * 60000;
-    const _kstNow = new Date(Date.now() + _kstOffset + new Date().getTimezoneOffset() * 60000);
-    const _toYYYYMMDD = d => d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
-    const _todayKST = _toYYYYMMDD(_kstNow);
     // meal.json date 필드에서 직접 요일 계산 → 금요일→다음주 월요일도 처리
     const _mealByDate = {};
+    if (_mealData.yesterday && _mealData.yesterday.date) _mealByDate[_mealData.yesterday.date] = _mealData.yesterday;
     if (_mealData.today.date)    _mealByDate[_mealData.today.date]    = _mealData.today;
     if (_mealData.tomorrow.date) _mealByDate[_mealData.tomorrow.date] = _mealData.tomorrow;
     let _meal = null;
     for (const [ds, entry] of Object.entries(_mealByDate)) {
-      if (!ds || ds < _todayKST) continue;  // 과거 날짜 스킵
+      if (!ds) continue;
       const dow = new Date(+ds.slice(0,4), +ds.slice(4,6)-1, +ds.slice(6,8)).getDay();
       const dayLabel = dow >= 1 && dow <= 5 ? DAYS[dow - 1] : null;
       if (currentDay === dayLabel) { _meal = entry; break; }

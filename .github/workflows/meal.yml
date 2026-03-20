@@ -18,6 +18,15 @@ jobs:
       - name: Fetch meal data
         run: |
           TODAY=$(TZ=Asia/Seoul date +"%Y%m%d")
+          # 직전 등교일: 월(1)→금(-3일), 일(7)→금(-2일), 그 외→-1일
+          TODAY_DOW=$(TZ=Asia/Seoul date +"%u")
+          if [ "$TODAY_DOW" -eq 1 ]; then
+            YESTERDAY=$(TZ=Asia/Seoul date -d '-3 days' +"%Y%m%d")
+          elif [ "$TODAY_DOW" -eq 7 ]; then
+            YESTERDAY=$(TZ=Asia/Seoul date -d '-2 days' +"%Y%m%d")
+          else
+            YESTERDAY=$(TZ=Asia/Seoul date -d '-1 day' +"%Y%m%d")
+          fi
           # 다음 등교일: 토(6)→+3일(월), 일(7)→+2일(월), 평일→+1일
           TOMORROW_DOW=$(TZ=Asia/Seoul date -d '+1 day' +"%u")
           if [ "$TOMORROW_DOW" -eq 6 ]; then
@@ -45,19 +54,22 @@ jobs:
               | jq -Rs 'split("<br/>") | map(gsub("^\\s+|\\s+$";"")) | map(select(. != ""))'
           }
 
+          YESTERDAY_MENUS=$(fetch_menus "$YESTERDAY")
           TODAY_MENUS=$(fetch_menus "$TODAY")
           TOMORROW_MENUS=$(fetch_menus "$TOMORROW")
+          [ -z "$YESTERDAY_MENUS" ] && YESTERDAY_MENUS="null"
           [ -z "$TODAY_MENUS" ]    && TODAY_MENUS="null"
           [ -z "$TOMORROW_MENUS" ] && TOMORROW_MENUS="null"
+          echo "YESTERDAY_MENUS=${YESTERDAY_MENUS}"
           echo "TODAY_MENUS=${TODAY_MENUS}"
           echo "TOMORROW_MENUS=${TOMORROW_MENUS}"
 
           UPDATED=$(TZ=Asia/Seoul date +"%Y-%m-%dT%H:%M:%S+09:00")
           jq -cn \
-            --arg today "$TODAY" --arg tomorrow "$TOMORROW" \
-            --argjson tm "$TODAY_MENUS" --argjson dm "$TOMORROW_MENUS" \
+            --arg yesterday "$YESTERDAY" --arg today "$TODAY" --arg tomorrow "$TOMORROW" \
+            --argjson ym "$YESTERDAY_MENUS" --argjson tm "$TODAY_MENUS" --argjson dm "$TOMORROW_MENUS" \
             --arg updated "$UPDATED" \
-            '{today:{date:$today,menus:$tm},tomorrow:{date:$tomorrow,menus:$dm},updatedAt:$updated}' \
+            '{yesterday:{date:$yesterday,menus:$ym},today:{date:$today,menus:$tm},tomorrow:{date:$tomorrow,menus:$dm},updatedAt:$updated}' \
             > meal.json
           echo "meal.json:"; cat meal.json
 
