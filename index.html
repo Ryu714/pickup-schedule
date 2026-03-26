@@ -1336,7 +1336,7 @@ async function loadWeather() {
   try {
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch('https://ryuryu.synology.me/weather.json', { signal: controller.signal });
+    const res = await fetch('https://pickup-proxy.jeonghun-ryu.workers.dev/weather.json', { signal: controller.signal });
     clearTimeout(tid);
     const data = await res.json();
     localStorage.setItem('weather_cache_v2', JSON.stringify({ data, ts: Date.now() }));
@@ -1359,7 +1359,7 @@ async function loadMeal() {
   try {
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch('https://ryuryu.synology.me/meal.json', { signal: controller.signal });
+    const res = await fetch('https://pickup-proxy.jeonghun-ryu.workers.dev/meal.json', { signal: controller.signal });
     clearTimeout(tid);
     const data = await res.json();
     localStorage.setItem('meal_cache_v2', JSON.stringify({ data }));
