@@ -1302,26 +1302,30 @@ async function loadWeather() {
     const res = await fetch('https://ryuryu.synology.me/weather.json', { signal: controller.signal });
     clearTimeout(tid);
     const data = await res.json();
-    localStorage.setItem('weather_cache', JSON.stringify({ data, ts: Date.now() }));
+    localStorage.setItem('weather_cache_v2', JSON.stringify({ data, ts: Date.now() }));
     renderWeather(data);
   } catch (e) {
-    const cached = localStorage.getItem('weather_cache');
+    const cached = localStorage.getItem('weather_cache_v2');
     if (cached) renderWeather(JSON.parse(cached).data);
   }
 }
+
+// 이전 버전 캐시 정리
+localStorage.removeItem('weather_cache');
+localStorage.removeItem('meal_cache');
 
 loadWeather();
 setInterval(loadWeather, 10 * 60 * 1000);
 
 async function loadMeal() {
-  const cached = localStorage.getItem('meal_cache');
+  const cached = localStorage.getItem('meal_cache_v2');
   try {
     const controller = new AbortController();
     const tid = setTimeout(() => controller.abort(), 5000);
     const res = await fetch('https://ryuryu.synology.me/meal.json', { signal: controller.signal });
     clearTimeout(tid);
     const data = await res.json();
-    localStorage.setItem('meal_cache', JSON.stringify({ data }));
+    localStorage.setItem('meal_cache_v2', JSON.stringify({ data }));
     _mealData = data; render();
   } catch (e) {
     if (cached) { _mealData = JSON.parse(cached).data; render(); }
