@@ -124,7 +124,7 @@
 
   .header-top {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-2);
     margin-bottom: 0;
   }
@@ -163,9 +163,30 @@
     min-height: 1em;
   }
 
+  .weather-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .weather-group-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .weather-updated {
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    font-weight: 400;
+    text-align: right;
+    margin-top: 2px;
+  }
+
   /* Weather Widget */
   .weather-widget {
-    margin-left: auto;
     display: flex;
     align-items: center;
     gap: 0;
@@ -710,29 +731,34 @@
         <h1>등하원 시간표</h1>
         <div class="header-subtitle" id="headerSubtitle"></div>
       </div>
-      <aside class="weather-widget" id="weatherWidget" role="status" aria-label="현재 날씨" aria-live="polite" aria-atomic="true">
-        <div class="weather-now">
-          <span class="weather-icon" id="weatherIcon" aria-hidden="true"></span>
-          <span class="weather-temp" id="weatherTemp"></span>
+      <div class="weather-group">
+        <div class="weather-group-row">
+          <aside class="weather-widget" id="weatherWidget" role="status" aria-label="현재 날씨" aria-live="polite" aria-atomic="true">
+            <div class="weather-now">
+              <span class="weather-icon" id="weatherIcon" aria-hidden="true"></span>
+              <span class="weather-temp" id="weatherTemp"></span>
+            </div>
+            <div class="weather-range" id="weatherRange">
+              <span class="weather-high"><span class="weather-arrow">↑</span><span id="weatherHigh"></span></span>
+              <span class="weather-low"><span class="weather-arrow">↓</span><span id="weatherLow"></span></span>
+            </div>
+            <span class="sr-only" id="weatherSr"></span>
+          </aside>
+          <div class="dust-widget" id="dustWidget" role="status" aria-live="polite" hidden>
+            <div class="dust-range">
+              <span class="dust-row">
+                <span class="dust-lbl">미세</span>
+                <span class="dust-dot" id="dustDot10" aria-hidden="true"></span>
+              </span>
+              <span class="dust-row">
+                <span class="dust-lbl">초미세</span>
+                <span class="dust-dot" id="dustDot25" aria-hidden="true"></span>
+              </span>
+            </div>
+            <span class="sr-only" id="dustSr"></span>
+          </div>
         </div>
-        <div class="weather-range" id="weatherRange">
-          <span class="weather-high"><span class="weather-arrow">↑</span><span id="weatherHigh"></span></span>
-          <span class="weather-low"><span class="weather-arrow">↓</span><span id="weatherLow"></span></span>
-        </div>
-        <span class="sr-only" id="weatherSr"></span>
-      </aside>
-      <div class="dust-widget" id="dustWidget" role="status" aria-live="polite" hidden>
-        <div class="dust-range">
-          <span class="dust-row">
-            <span class="dust-lbl">미세</span>
-            <span class="dust-dot" id="dustDot10" aria-hidden="true"></span>
-          </span>
-          <span class="dust-row">
-            <span class="dust-lbl">초미세</span>
-            <span class="dust-dot" id="dustDot25" aria-hidden="true"></span>
-          </span>
-        </div>
-        <span class="sr-only" id="dustSr"></span>
+        <div class="weather-updated" id="weatherUpdated"></div>
       </div>
     </div>
   </header>
@@ -1293,6 +1319,19 @@ function renderWeather(data) {
     info.label + ', 현재 ' + data.temp + '도, 최저 ' + data.min + '도, 최고 ' + data.max + '도';
   document.getElementById('weatherWidget').classList.add('loaded');
   renderDust(data);
+
+  // 업데이트 시간 표시
+  if (data.updatedAt) {
+    const d = new Date(data.updatedAt);
+    const mon = d.getMonth() + 1;
+    const day = d.getDate();
+    const h = d.getHours();
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const ampm = h >= 12 ? '오후' : '오전';
+    const dh = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+    const el = document.getElementById('weatherUpdated');
+    if (el) el.textContent = `${mon}/${day}, ${ampm} ${dh}:${m} 기준`;
+  }
 }
 
 async function loadWeather() {
