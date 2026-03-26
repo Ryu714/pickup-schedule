@@ -134,7 +134,7 @@ jobs:
         env:
           AIR_API_KEY: ${{ secrets.AIR_API_KEY }}
         run: |
-          STATION="경안동"
+          STATION="오포1동"
           AQ=$(curl -sG --max-time 10 \
             "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty" \
             --data-urlencode "serviceKey=${AIR_API_KEY}" \

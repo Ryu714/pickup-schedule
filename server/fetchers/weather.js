@@ -140,7 +140,7 @@ async function fetchWeather() {
   let pm25 = prev.pm25 || null;
 
   try {
-    const station = encodeURIComponent('경안동');
+    const station = encodeURIComponent('오포1동');
     const url = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${encodeURIComponent(AIR_KEY)}&stationName=${station}&dataTerm=DAILY&pageNo=1&numOfRows=1&returnType=json&ver=1.0`;
     const data = await fetchWithRetry(url);
     const item = data?.response?.body?.items?.[0];
