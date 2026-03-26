@@ -1323,14 +1323,12 @@ function renderWeather(data) {
   // 업데이트 시간 표시
   if (data.updatedAt) {
     const d = new Date(data.updatedAt);
-    const mon = d.getMonth() + 1;
-    const day = d.getDate();
     const h = d.getHours();
     const m = String(d.getMinutes()).padStart(2, '0');
     const ampm = h >= 12 ? '오후' : '오전';
     const dh = h > 12 ? h - 12 : (h === 0 ? 12 : h);
     const el = document.getElementById('weatherUpdated');
-    if (el) el.textContent = `${mon}/${day}, ${ampm} ${dh}:${m} 기준`;
+    if (el) el.textContent = `${ampm} ${dh}:${m} 기준`;
   }
 }
 
