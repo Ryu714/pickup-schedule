@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   update-weather:
+    if: false  # NAS로 마이그레이션 완료 — 비활성화
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

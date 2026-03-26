@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  pickup-api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
