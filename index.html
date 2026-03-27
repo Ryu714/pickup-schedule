@@ -628,14 +628,6 @@
     border-left-width: 4px;
   }
 
-  @keyframes cardGlowActive {
-    0%, 100% { box-shadow: 0 0 4px 1px rgba(34, 197, 94, 0.15), var(--shadow-sm); }
-    50% { box-shadow: 0 0 16px 4px rgba(34, 197, 94, 0.4), var(--shadow-sm); }
-  }
-  .side-card.glow-active {
-    animation: cardGlowActive 3s ease-in-out infinite;
-    border-left-width: 4px;
-  }
 
   /* Empty */
   .empty-state {
@@ -1138,7 +1130,6 @@ function renderNowIndicator(scrollToCenter) {
 
 function applyGlowToNextCards() {
   document.querySelectorAll('.glow-next').forEach(el => el.classList.remove('glow-next'));
-  document.querySelectorAll('.glow-active').forEach(el => el.classList.remove('glow-active'));
 
   if (!isToday()) return;
   if (_sideRows.length === 0) return;
@@ -1150,29 +1141,6 @@ function applyGlowToNextCards() {
 
   const leftCells = sbs.querySelectorAll('.side-cell-left, .side-cell-empty-left');
   const rightCells = sbs.querySelectorAll('.side-cell-right, .side-cell-empty-right');
-
-  // "In progress" detection
-  ['yoonwoo', 'jun'].forEach(child => {
-    const events = DATA[child].schedule[currentDay] || [];
-    for (let i = 0; i < events.length; i++) {
-      if (events[i].dir === 'arrive') {
-        const leaveEv = events.find((e, j) => j > i && e.type === events[i].type && e.dir === 'leave');
-        if (leaveEv && parseTime(events[i].time) <= nowMin && nowMin < parseTime(leaveEv.time)) {
-          for (let r = 0; r < _sideRows.length; r++) {
-            const row = _sideRows[r];
-            const ev = child === 'yoonwoo' ? row.left : row.right;
-            if (ev && ev.time === events[i].time && ev.type === events[i].type) {
-              const cells = child === 'yoonwoo'
-                ? sbs.querySelectorAll('.side-cell-left, .side-cell-empty-left')
-                : sbs.querySelectorAll('.side-cell-right, .side-cell-empty-right');
-              const card = cells[r]?.querySelector('.side-card');
-              if (card && !card.classList.contains('is-past')) card.classList.add('glow-active');
-            }
-          }
-        }
-      }
-    }
-  });
 
   // Next upcoming card glow
   let nextRowIdx = -1;
