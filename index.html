@@ -270,10 +270,9 @@
     gap: 5px;
   }
   .dust-lbl { color: var(--muted-foreground); font-weight: 400; min-width: 3em; }
-  .dust-dot {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
+  .dust-face {
+    width: 13px;
+    height: 13px;
     flex-shrink: 0;
   }
 
@@ -740,11 +739,11 @@
             <div class="dust-range">
               <span class="dust-row">
                 <span class="dust-lbl">미세</span>
-                <span class="dust-dot" id="dustDot10" aria-hidden="true"></span>
+                <span class="dust-face" id="dustFace10" aria-hidden="true"></span>
               </span>
               <span class="dust-row">
                 <span class="dust-lbl">초미세</span>
-                <span class="dust-dot" id="dustDot25" aria-hidden="true"></span>
+                <span class="dust-face" id="dustFace25" aria-hidden="true"></span>
               </span>
             </div>
             <span class="sr-only" id="dustSr"></span>
@@ -1229,10 +1228,10 @@ function getDustGrade(pm, type) {
   if (pm == null || isNaN(pm)) return null;
   const thresholds = type === 'pm10' ? [30, 80, 150] : [15, 35, 75];
   const grades = [
-    { label: '좋음',     color: '#38bdf8' },
-    { label: '보통',     color: '#22c55e' },
-    { label: '나쁨',     color: '#f97316' },
-    { label: '매우나쁨', color: '#ef4444' },
+    { label: '좋음',     color: '#38bdf8', face: 'good' },
+    { label: '보통',     color: '#22c55e', face: 'good' },
+    { label: '나쁨',     color: '#f97316', face: 'bad' },
+    { label: '매우나쁨', color: '#ef4444', face: 'bad' },
   ];
   for (let i = 0; i < thresholds.length; i++) {
     if (pm <= thresholds[i]) return grades[i];
@@ -1248,15 +1247,26 @@ function renderDust(data) {
   if (!g10 && !g25) { widget.hidden = true; return; }
   widget.hidden = false;
 
-  function applyGrade(dotEl, info) {
-    const row = dotEl.closest('.dust-row');
-    if (!info) { row.hidden = true; return; }
-    row.hidden = false;
-    dotEl.style.background = info.color;
+  function dustFaceSVG(color, face) {
+    const mouth = face === 'good'
+      ? '<path d="M4.5 8.5c0 0 1.5 2 3.5 2s3.5-2 3.5-2" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>'
+      : '<path d="M4.5 10.5c0 0 1.5-2 3.5-2s3.5 2 3.5 2" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>';
+    return '<svg viewBox="0 0 16 16" width="13" height="13" fill="none">'
+      + '<circle cx="8" cy="8" r="7" fill="' + color + '"/>'
+      + '<circle cx="5.5" cy="6" r="1" fill="#fff"/>'
+      + '<circle cx="10.5" cy="6" r="1" fill="#fff"/>'
+      + mouth + '</svg>';
   }
 
-  applyGrade(document.getElementById('dustDot10'), g10);
-  applyGrade(document.getElementById('dustDot25'), g25);
+  function applyGrade(faceEl, info) {
+    const row = faceEl.closest('.dust-row');
+    if (!info) { row.hidden = true; return; }
+    row.hidden = false;
+    faceEl.innerHTML = dustFaceSVG(info.color, info.face);
+  }
+
+  applyGrade(document.getElementById('dustFace10'), g10);
+  applyGrade(document.getElementById('dustFace25'), g25);
 
   const parts = [];
   if (g10) parts.push('미세먼지 ' + g10.label + (data.pm10 != null ? ' ' + data.pm10 + 'µg' : ''));
