@@ -1014,7 +1014,7 @@ function renderBoth() {
       html += `<div class="side-meal-left">
         <div class="side-card" style="border-left-color:#10b981;min-height:auto;">
           <div class="event-card-header">
-            <span class="event-time" style="font-size:var(--text-sm);font-weight:600;">급식정보</span>
+            <span class="event-time" style="font-size:var(--text-sm);font-weight:600;">급식정보(${+_meal.date.slice(4,6)}/${+_meal.date.slice(6,8)})</span>
             <span class="meal-tag">한아람초</span>
           </div>
           <div class="event-detail" style="word-break:keep-all;white-space:normal;">${_meal.menus.join(' · ')}</div>
