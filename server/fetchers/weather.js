@@ -67,7 +67,19 @@ async function fetchWeather() {
 
   const prev = readPrevious();
   let temp = null, sky = prev.sky || 1, pty = prev.pty || 0;
-  let min = prev.min, max = prev.max;
+
+  // 날짜가 바뀌면 min/max 리셋 (이전 날 값이 고착되는 버그 방지)
+  const todayStr = formatDate(kst);
+  const prevDate = prev.updatedAt ? prev.updatedAt.slice(0, 10).replace(/-/g, '') : null;
+  let min, max;
+  if (prevDate === todayStr) {
+    min = prev.min;
+    max = prev.max;
+  } else {
+    min = undefined;
+    max = undefined;
+    console.log(`[weather] New day detected (${prevDate} → ${todayStr}), resetting min/max`);
+  }
 
   // 1. Ultra short-term forecast (T1H, SKY, PTY)
   try {
@@ -95,7 +107,6 @@ async function fetchWeather() {
   }
 
   // 2. Village forecast for TMN/TMX
-  const todayStr = formatDate(kst);
   const vilagBaseTimes = [23, 20, 17, 14, 11, 8, 5, 2];
 
   for (const vt of vilagBaseTimes) {
@@ -122,18 +133,18 @@ async function fetchWeather() {
     }
   }
 
-  // Fallback to previous values
-  if (min === undefined || min === null) min = prev.min || 0;
-  if (max === undefined || max === null) max = prev.max || 0;
+  // Fallback: null 사용 (0 고착 방지)
+  if (min === undefined || min === null) min = prev.min ?? null;
+  if (max === undefined || max === null) max = prev.max ?? null;
 
   // Round to integers
   temp = Math.round(temp);
-  min = Math.round(min);
-  max = Math.round(max);
+  if (min !== null) min = Math.round(min);
+  if (max !== null) max = Math.round(max);
 
   // Correct range
-  if (temp < min) min = temp;
-  if (temp > max) max = temp;
+  if (min !== null && temp < min) min = temp;
+  if (max !== null && temp > max) max = temp;
 
   // 3. Air quality
   let pm10 = prev.pm10 || null;

@@ -1291,10 +1291,12 @@ function renderWeather(data) {
   const info = getWeatherInfo(data.sky, data.pty);
   document.getElementById('weatherIcon').innerHTML = info.icon;
   document.getElementById('weatherTemp').textContent = data.temp + '°';
-  document.getElementById('weatherLow').textContent = data.min + '°';
-  document.getElementById('weatherHigh').textContent = data.max + '°';
+  document.getElementById('weatherLow').textContent = data.min != null ? data.min + '°' : '--';
+  document.getElementById('weatherHigh').textContent = data.max != null ? data.max + '°' : '--';
+  const minTxt = data.min != null ? data.min + '도' : '정보없음';
+  const maxTxt = data.max != null ? data.max + '도' : '정보없음';
   document.getElementById('weatherSr').textContent =
-    info.label + ', 현재 ' + data.temp + '도, 최저 ' + data.min + '도, 최고 ' + data.max + '도';
+    info.label + ', 현재 ' + data.temp + '도, 최저 ' + minTxt + ', 최고 ' + maxTxt;
   document.getElementById('weatherWidget').classList.add('loaded');
   renderDust(data);
 
