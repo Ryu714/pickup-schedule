@@ -19,7 +19,7 @@
 
 | 파일 | 역할 |
 |------|------|
-| `index.html` | 전체 앱 (CSS+HTML+JS, ~1300줄) |
+| `index.html` | 전체 앱 (CSS+HTML+JS, ~1200줄) |
 | `manifest.json` | PWA 매니페스트 |
 | `sw.js` | 최소 Service Worker |
 | `server/index.js` | NAS Express 서버 + cron 스케줄러 |
@@ -35,8 +35,11 @@
 ## 코딩 컨벤션
 
 - 빌드 도구/번들러 없음. 단일 파일 구조 유지
-- CSS 변수(custom properties) 기반 디자인 시스템 (shadcn/zinc)
-- 라이트/다크 모드: `.dark` 클래스로 전환
+- CSS 변수(custom properties) 기반 디자인 토큰 (`:root`), 라이트 테마 단일 (다크 모드 없음)
+- 폰트: Pretendard Variable (jsDelivr CDN) → 시스템 폰트 폴백
+- 레이아웃: 상단 고정 영역(요일 탭 + 오늘의 다음 일정 카드) / 급식 카드 / 중앙 시간축 타임라인(좌 최윤우, 우 류준)
+- 활동별 색은 아이콘 칩(`.ev-icon`)에만 사용, 배지·테두리는 무채색. 다가올 카드는 앰버 글로우
+- `color-mix()`를 쓰는 곳은 구형 브라우저용 rgba 폴백을 앞에 둘 것
 - 한국어 주석 사용
 
 ## 변경 시 주의사항
