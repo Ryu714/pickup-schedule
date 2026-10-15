@@ -90,7 +90,6 @@
      Header
      ──────────────────────────────────────────────── */
   .header {
-    padding-top: max(14px, env(safe-area-inset-top));
     margin-bottom: 12px;
   }
   .header-top {
@@ -189,10 +188,10 @@
      ──────────────────────────────────────────────── */
   .sticky-top {
     position: sticky;
-    top: env(safe-area-inset-top, 0px);
+    top: 0;
     z-index: 30;
     margin: 0 -16px;
-    padding: 8px 16px 8px;
+    padding: max(14px, env(safe-area-inset-top)) 16px 8px;
     background: rgba(246, 246, 247, 0.86);
     background: color-mix(in srgb, var(--bg) 84%, transparent);
     -webkit-backdrop-filter: saturate(160%) blur(16px);
@@ -673,6 +672,7 @@
 </head>
 <body>
   <div class="wrapper">
+    <div class="sticky-top" id="stickyTop">
     <header class="header">
       <div class="header-top">
         <div class="eyebrow" id="eyebrow">등하원 시간표</div>
@@ -696,7 +696,6 @@
         <span class="sr-only" id="weatherSr"></span>
       </aside>
     </header>
-    <div class="sticky-top" id="stickyTop">
       <nav class="day-tabs" id="dayTabs" role="tablist" aria-label="요일 선택"></nav>
       <div id="nextUpSlot"></div>
     </div>
